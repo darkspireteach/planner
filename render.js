@@ -24,10 +24,19 @@ const ALL = (() => {
    records like any other cell, so they can be edited and synced. */
 for (const w of WEEKS) for (const d of w.days) {
   if (d.noteLines === undefined) {
-    d.noteLines = d.note
-      ? [{bullet: false, private: false, spans: [{t: d.note, url: null, rel: false, priv: false}]}]
+    // on a day with no school the note IS the reason, so there is one field to
+    // edit rather than two that mean nearly the same thing
+    const seed = d.cycle ? d.note : (d.off || d.note);
+    d.noteLines = seed
+      ? [{bullet: false, private: false, spans: [{t: seed, url: null, rel: false, priv: false}]}]
       : null;
   }
+}
+
+/** the plain text of a day's note, used as the off-day label */
+function noteText(d) {
+  if (!d.noteLines) return d.cycle ? '' : (d.off || '');
+  return d.noteLines.filter(Boolean).map(l => l.spans.map(s => s.t).join('')).join(' ').trim();
 }
 
 /* Monday of the week we're actually in, as YYYY-MM-DD */
@@ -155,7 +164,7 @@ function render() {
   P.length = 0;
   put(1, 1, 1, 'corner');
   w.days.forEach((d, i) => put(i + 2, 1, 1, 'dh', '',
-    `<b>${d.d}</b><span>${d.cycle ? 'Day ' + d.cycle : (d.off || '')}</span>` +
+    `<b>${d.d}</b><span>${d.cycle ? 'Day ' + d.cycle : esc(noteText(d) || 'No school')}</span>` +
     (student ? '' : `<div class="dhnote" data-w="${wi}" data-d="${i}" ` +
       `data-f="note" data-h="${wi}.${i}.n">${lines(d.noteLines)}</div>`)));
 
@@ -180,7 +189,7 @@ function render() {
         const col = di + 2;
         const idx = d.cycle ? d.blocks.map((b, i) => [b, i]).filter(([b]) => b.period === per) : [];
         if (!idx.length) {
-          put(col, r, rowsN, 'cell off bt', '', d.cycle ? '' : `<div class="offtag">${esc(d.off || '')}</div>`);
+          put(col, r, rowsN, 'cell off bt', '', d.cycle ? '' : `<div class="offtag">${esc(noteText(d) || 'No school')}</div>`);
           return;
         }
         const [main, mi] = idx.find(([b]) => b.block !== 'ASP') || idx[0];
@@ -216,7 +225,7 @@ function render() {
       w.days.forEach((d, di) => {
         const col = di + 2;
         if (!d.cycle) {
-          put(col, r, span, 'cell off bt', '', bi === 0 ? `<div class="offtag">${esc(d.off || '')}</div>` : '');
+          put(col, r, span, 'cell off bt', '', bi === 0 ? `<div class="offtag">${esc(noteText(d) || 'No school')}</div>` : '');
           return;
         }
         const b = d.blocks[bi], c = b.course;

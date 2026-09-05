@@ -211,6 +211,8 @@ function calendarPayload() {
     label: w.label, mon: w.mon,
     days: w.days.map(d => ({
       d: d.d, iso: d.iso, cycle: d.cycle, off: d.off || '',
+      // for a no-school day the reason may have been edited; the endpoint
+      // prefers the note record, but send the seed so a fresh one has something
       blocks: d.blocks.filter(b => b.course)
         .map(b => ({block: b.block, period: b.period, asp: !!b.asp}))
     }))
