@@ -28,7 +28,9 @@ h1{grid-column:3;grid-row:1;justify-self:end;margin:0;
   font-size:17px;font-weight:600;color:var(--slate);letter-spacing:.01em}
 .weeknav{grid-column:1;grid-row:1;display:flex;align-items:center;gap:7px}
 .weeknav button{font-size:13px;padding:1px 9px;line-height:1.25;color:var(--ink)}
-.wk{font-size:17px;color:var(--slate);min-width:13em;text-align:center;
+/* wide enough for the longest label it can ever hold — "This week · JAN 11 –
+   JAN 15, 2027" — so the arrows never shift as you page through weeks */
+.wk{font-size:17px;color:var(--slate);min-width:17.5em;text-align:center;
   white-space:nowrap}
 .wk b{color:var(--ink);font-weight:700}
 /* wide: date left, buttons centred, title right, all on one line.
