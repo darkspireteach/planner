@@ -197,6 +197,44 @@ function onConflict(c) {
   else if (el) el.classList.add('sel');
 }
 
+/* ---------- the calendar, handed to the endpoint ---------- */
+
+/* The endpoint stores records but has no idea which dates are school days or
+   what P1 is called. It needs that to publish anything, so the app sends it —
+   only when it has actually changed, since it rarely does. */
+function calendarPayload() {
+  const courses = {};
+  for (const w of WEEKS) for (const d of w.days) for (const b of d.blocks) {
+    if (b.course && !courses[b.period]) courses[b.period] = b.course;
+  }
+  const weeks = WEEKS.map(w => ({
+    label: w.label, mon: w.mon,
+    days: w.days.map(d => ({
+      d: d.d, iso: d.iso, cycle: d.cycle, off: d.off || '',
+      blocks: d.blocks.filter(b => b.course)
+        .map(b => ({block: b.block, period: b.period, asp: !!b.asp}))
+    }))
+  }));
+  return {weeks, courses};
+}
+
+const stamp = o => {                       // cheap change detector
+  const t = JSON.stringify(o);
+  let h = 0;
+  for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+  return String(h) + ':' + t.length;
+};
+
+async function sendCalendar() {
+  const payload = calendarPayload();
+  const mark = stamp(payload);
+  if (cfg.calStamp === mark) return 0;
+  const d = await call('calendar', payload);
+  cfg.calStamp = mark;
+  saveSync();
+  return d.weeks || 0;
+}
+
 /* ---------- absences, read-only ---------- */
 
 async function pullAbsences() {
@@ -262,6 +300,7 @@ async function startSync() {
   try {
     await pullNow();
     await flush();
+    try { await sendCalendar(); } catch (err) { /* it can go next time */ }
     // after the grid is up: this one opens another workbook and can be slow
     try { await pullAbsences(); } catch (err) { /* no gradebook configured yet */ }
     setNote(Object.keys(queue).length ? Object.keys(queue).length + ' pending' : 'Up to date');

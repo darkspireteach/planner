@@ -31,8 +31,14 @@ must never touch that one.
 
 ## The endpoint
 
-`Sync.gs` lives in the planner spreadsheet's Apps Script, alongside `Publish.gs`
-— it calls that file's gradebook readers rather than duplicating them.
+`apps-script/Sync.gs` is the source of what runs in the planner spreadsheet's
+Apps Script, alongside `Publish.gs` — it calls that file's gradebook readers
+rather than duplicating them. It is kept here so it is versioned and so the
+tests can run its redaction directly; it holds no secrets, since the token
+lives in Script Properties.
+
+Students read it through `doGet` with no token: `…/exec?c=p1`. Everything
+teacher-only is stripped server-side, never in the page.
 
 After changing `Sync.gs`: **Deploy ▸ Manage deployments ▸** pencil **▸ Version:
 New version ▸ Deploy.** The URL and token stay the same.
