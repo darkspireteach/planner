@@ -69,6 +69,12 @@ Publishing is `Planner sync ▸ Publish to students now`, or every 15 minutes wi
 the trigger on. Students see through the Friday of the current week, and the
 week turns over at 5am on Monday.
 
+Layout is date, block, class work, homework across the page — Chromebook
+screens are wide, and a single column wasted most of one. It stacks below
+52rem. The band at the top is the `Student Links` tab, which `Publish.gs`
+already maintains; the endpoint reads it and hands each class its own links
+plus anything marked ALL.
+
 ## Not done yet
 
 - The student page: published JSON, one page per class.
