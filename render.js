@@ -22,21 +22,22 @@ const ALL = (() => {
 
 /* Day notes start life as the plain string the sheet had; from here they are
    records like any other cell, so they can be edited and synced. */
+const asLines = t => t
+  ? [{bullet: false, private: false, spans: [{t: t, url: null, rel: false, priv: false}]}]
+  : null;
+
+/* Two separate fields under a date, and they mean different things:
+   offLines  the school's reason for no school — students see this
+   noteLines my own note for the day — teacher only, never published */
 for (const w of WEEKS) for (const d of w.days) {
-  if (d.noteLines === undefined) {
-    // on a day with no school the note IS the reason, so there is one field to
-    // edit rather than two that mean nearly the same thing
-    const seed = d.cycle ? d.note : (d.off || d.note);
-    d.noteLines = seed
-      ? [{bullet: false, private: false, spans: [{t: seed, url: null, rel: false, priv: false}]}]
-      : null;
-  }
+  if (d.noteLines === undefined) d.noteLines = asLines(d.note);
+  if (d.offLines === undefined) d.offLines = asLines(d.cycle ? '' : d.off);
 }
 
-/** the plain text of a day's note, used as the off-day label */
-function noteText(d) {
-  if (!d.noteLines) return d.cycle ? '' : (d.off || '');
-  return d.noteLines.filter(Boolean).map(l => l.spans.map(s => s.t).join('')).join(' ').trim();
+/** the school's reason, as plain text, for the grey band across the day */
+function offText(d) {
+  if (!d.offLines) return d.off || '';
+  return d.offLines.filter(Boolean).map(l => l.spans.map(s => s.t).join('')).join(' ').trim();
 }
 
 /* Monday of the week we're actually in, as YYYY-MM-DD */
@@ -167,7 +168,13 @@ function render() {
   P.length = 0;
   put(1, 1, 1, 'corner');
   w.days.forEach((d, i) => put(i + 2, 1, 1, 'dh', '',
-    `<b>${d.d}</b><span>${d.cycle ? 'Day ' + d.cycle : 'No school'}</span>` +
+    `<b>${d.d}</b>` +
+    (d.cycle
+      ? `<span>Day ${d.cycle}</span>`
+      : (student
+          ? `<span>${esc(offText(d) || 'No school')}</span>`
+          : `<div class="dhoff" data-w="${wi}" data-d="${i}" data-f="off" ` +
+            `data-h="${wi}.${i}.o">${lines(d.offLines)}</div>`)) +
     (student ? '' : `<div class="dhnote" data-w="${wi}" data-d="${i}" ` +
       `data-f="note" data-h="${wi}.${i}.n">${lines(d.noteLines)}</div>`)));
 
@@ -192,7 +199,7 @@ function render() {
         const col = di + 2;
         const idx = d.cycle ? d.blocks.map((b, i) => [b, i]).filter(([b]) => b.period === per) : [];
         if (!idx.length) {
-          put(col, r, rowsN, 'cell off bt', '', d.cycle ? '' : `<div class="offtag">${esc(noteText(d) || 'No school')}</div>`);
+          put(col, r, rowsN, 'cell off bt', '', d.cycle ? '' : `<div class="offtag">${esc(offText(d) || 'No school')}</div>`);
           return;
         }
         const [main, mi] = idx.find(([b]) => b.block !== 'ASP') || idx[0];
@@ -228,7 +235,7 @@ function render() {
       w.days.forEach((d, di) => {
         const col = di + 2;
         if (!d.cycle) {
-          put(col, r, span, 'cell off bt', '', bi === 0 ? `<div class="offtag">${esc(noteText(d) || 'No school')}</div>` : '');
+          put(col, r, span, 'cell off bt', '', bi === 0 ? `<div class="offtag">${esc(offText(d) || 'No school')}</div>` : '');
           return;
         }
         const b = d.blocks[bi], c = b.course;

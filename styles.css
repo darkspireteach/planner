@@ -76,6 +76,13 @@ button[hidden]{display:none}
 .dh{background:var(--paper);padding:.5em .7em;position:sticky;top:37px;z-index:10}
 .dh b{display:block;font-size:1.05em;font-weight:600}
 .dh span{font-size:.92em;color:var(--mute)}
+/* the school's reason for no school: editable, and what the day's cells show */
+.dhoff{font-size:.92em;color:var(--slate);padding:.05em .3em;min-height:1.1em}
+.dhoff:hover{box-shadow:inset 0 0 0 1px var(--rule)}
+.dhoff[contenteditable="true"]{outline:2px solid var(--link);outline-offset:-2px;background:#fff}
+.dhoff:empty::before{content:"No school";color:var(--mute)}
+.ed-off .dhoff{display:none}
+
 .dhnote{font-size:.92em;color:var(--slate);margin-top:.2em;
   padding:.1em .3em .1em .5em;border-left:2px solid transparent;min-height:1.1em}
 .dhnote:empty{border-left-color:var(--hair)}

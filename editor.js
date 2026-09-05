@@ -181,11 +181,12 @@ function cellLines(cell) {
 /* ---------- enter / leave ---------- */
 
 /* A day note is a record too, held on the day rather than on a block. */
-const EDITABLE = '.cell.sub[data-f], .dhnote[data-f]';
-const recOf = c => c.dataset.f === 'note'
+const DAY_FIELDS = {note: 'noteLines', off: 'offLines'};
+const EDITABLE = '.cell.sub[data-f], .dhnote[data-f], .dhoff[data-f]';
+const recOf = c => DAY_FIELDS[c.dataset.f]
   ? WEEKS[c.dataset.w].days[c.dataset.d]
   : WEEKS[c.dataset.w].days[c.dataset.d].blocks[c.dataset.bi];
-const fieldOf = c => c.dataset.f === 'note' ? 'noteLines' : c.dataset.f;
+const fieldOf = c => DAY_FIELDS[c.dataset.f] || c.dataset.f;
 
 function openCell(cell) {
   if (editing === cell || student || !cell.dataset.f) return;
@@ -309,13 +310,12 @@ function snapOf(cell) {
   return {w: d.w, d: d.d, bi: d.bi, f: d.f, lines: stateOf(cell)};
 }
 
-const snapSel = s => s.f === 'note'
-  ? '[data-f="note"][data-h="' + s.w + '.' + s.d + '.n"]'
+const DAY_SUFFIX = {note: 'n', off: 'o'};
+const snapSel = s => DAY_SUFFIX[s.f]
+  ? '[data-f="' + s.f + '"][data-h="' + s.w + '.' + s.d + '.' + DAY_SUFFIX[s.f] + '"]'
   : '[data-f="' + s.f + '"][data-h="' + s.w + '.' + s.d + '.' + s.bi + '"]';
-const snapRec = s => s.f === 'note'
-  ? WEEKS[s.w].days[s.d]
-  : WEEKS[s.w].days[s.d].blocks[s.bi];
-const snapField = s => s.f === 'note' ? 'noteLines' : s.f;
+const snapRec = s => DAY_FIELDS[s.f] ? WEEKS[s.w].days[s.d] : WEEKS[s.w].days[s.d].blocks[s.bi];
+const snapField = s => DAY_FIELDS[s.f] || s.f;
 
 /* call immediately BEFORE changing a cell */
 function mark(cell) {

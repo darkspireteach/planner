@@ -62,7 +62,7 @@ function saveSync() {
 function recKey(w, d, bi, f) {
   const day = WEEKS[w].days[d];
   if (!day.iso) return null;
-  if (f === 'note') return day.iso + '|day|note';
+  if (f === 'note' || f === 'off') return day.iso + '|day|' + f;
   const b = day.blocks[bi];
   if (!b) return null;
   if (f === 'prep') return day.iso + '|P' + b.period + (b.asp ? 'a' : '') + '|prep';
@@ -74,9 +74,10 @@ function recKey(w, d, bi, f) {
 function findRecord(key) {
   const [iso, per, f] = String(key).split('|');
   if (per === 'day') {
+    const field = f === 'off' ? 'offLines' : 'noteLines';
     for (const [w, wk] of WEEKS.entries())
       for (const [d, day] of wk.days.entries())
-        if (day.iso === iso) return {w, d, bi: null, f: 'noteLines'};
+        if (day.iso === iso) return {w, d, bi: null, f: field};
     return null;
   }
   const asp = per.endsWith('a');
@@ -186,7 +187,8 @@ function onConflict(c) {
   rec[at.f] = c.lines && c.lines.length ? c.lines : null;
   render();
   const el = document.querySelector(at.bi === null
-    ? '[data-f="note"][data-h="' + at.w + '.' + at.d + '.n"]'
+    ? '[data-f="' + (at.f === 'offLines' ? 'off' : 'note') + '"][data-h="' +
+      at.w + '.' + at.d + '.' + (at.f === 'offLines' ? 'o' : 'n') + '"]'
     : '[data-h="' + at.w + '.' + at.d + '.' + at.bi + '"][data-f="' + at.f + '"]');
   const where = c.key.split('|').slice(0, 2).join(' ');
   const keep = window.confirm(
