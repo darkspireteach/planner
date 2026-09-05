@@ -44,6 +44,10 @@ console.log('blank line kept         :', out.includes(null));
 console.log('bullet kept             :', out.some(l => l && l.bullet));
 console.log('no rel/priv flags leak  :', !JSON.stringify(out).includes('"rel"') &&
                                           !JSON.stringify(out).includes('"priv"'));
+const heldSpan = flat.find(s => s.t === 'Draft quiz');
+console.log('held span is flagged    :', heldSpan && heldSpan.held === 1);
+console.log('  but carries no url    :', heldSpan && !('url' in heldSpan));
+console.log('released is not flagged  :', !flat.find(s => s.url && s.held));
 console.log('empty cell -> null      :', redactLines([line([span('x')], {private: true})]) === null);
 
 console.log('\n--- off-day labels ---');

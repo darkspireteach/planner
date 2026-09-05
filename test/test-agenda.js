@@ -42,6 +42,14 @@ console.log('  and it is not a link:', !/00\.QUIZ\.1[^<]*<\/a>/.test(out) &&
             !links.some(a => a.textContent.includes('00.QUIZ.1')));
 
 console.log('');
+const heldEls = [...document.querySelectorAll('.held')];
+console.log('held spans marked   :', heldEls.length, heldEls.map(e => e.textContent.slice(0,12)));
+console.log('  still not links   :', heldEls.every(e => e.tagName !== 'A' && !e.closest('a')));
+console.log('  and carry no url  :', !heldEls.some(e => e.outerHTML.includes('http')));
+const css = fs.readFileSync('agenda/agenda.css', 'utf8');
+console.log('links are styled    :', /(^|\n)a\{[^}]*text-decoration:underline/.test(css));
+console.log('held style present  :', /\.held\{[^}]*underline dotted/.test(css));
+
 console.log('bullets kept        :', document.querySelectorAll('.ln.b').length);
 console.log('blank lines kept    :', document.querySelectorAll('.gap').length);
 console.log('off day reason shown:', /Staff Day/.test(out));
