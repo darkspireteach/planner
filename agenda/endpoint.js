@@ -9,4 +9,4 @@
  * link you have posted in Schoology would stop working.
  */
 const ENDPOINT =
-  'https://script.google.com/macros/s/PASTE_YOUR_EXEC_URL_HERE/exec';
+  'https://script.google.com/macros/s/AKfycbxT-0alZZnK-eMvsBKm123kM1KmFHzGNhLGBmAAFdmKodZwpZDxn4yDqudA1q0NUz9ZoA/exec';
