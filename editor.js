@@ -800,11 +800,15 @@ function insertClip(clip, raw, range) {
       box.innerHTML = clip;
       // strip the wrapper the browser adds around a copied fragment
       box.querySelectorAll('meta,style,script,title').forEach(n => n.remove());
-      normalizeBreaks(box);
       const own = box.querySelector('[data-f]') || box.querySelector('.ln');
       if (own) {
+        // NOT normalizeBreaks: our own markup puts every line in its own div,
+        // so the only newlines here are the ones the browser leaves between
+        // elements in the clipboard wrapper — turning those into breaks is
+        // what put three blank lines at the top of every pasted cell
         ls = cellLines(box.querySelector('[data-f]') || box);
       } else {
+        normalizeBreaks(box);
         // a multi-cell copy comes as a table; a single cell does not
         const src = box.querySelector('td') || box;
         ls = splitBr(src).map(f => {
@@ -812,11 +816,12 @@ function insertClip(clip, raw, range) {
           d.appendChild(f);
           return lineFrom(d);
         });
-        // the wrapper the browser adds carries newlines of its own
-        while (ls.length && ls[ls.length - 1] === null) ls.pop();
-        while (ls.length && ls[0] === null) ls.shift();
         ls = applyStars(ls);
       }
+      // the wrapper the browser adds carries blank lines of its own, whichever
+      // branch produced them
+      while (ls.length && ls[ls.length - 1] === null) ls.pop();
+      while (ls.length && ls[0] === null) ls.shift();
     } else {
       const holder = document.createElement('div');
       (raw || '').replace(/\r\n?/g, '\n').split('\n').forEach(line => {
