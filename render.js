@@ -38,6 +38,21 @@ function mondayISO() {
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
 }
 
+/* Hold the label box open at the width of the longest label in the file. */
+let sized = false;
+function sizeWeekLabel() {
+  if (sized) return;
+  const box = document.getElementById('wksizer');
+  if (!box) return;
+  let longest = '';
+  for (const w of WEEKS) {
+    const t = 'This week \u00b7 ' + w.label;
+    if (t.length > longest.length) longest = t;
+  }
+  box.innerHTML = '<b>This week</b> \u00b7 ' + esc(longest.replace(/^This week \u00b7 /, ''));
+  sized = true;
+}
+
 function tintOf(hex, k) {
   const n = parseInt(hex.slice(1), 16);
   const f = i => Math.round(255 + ((n >> i & 255) - 255) * k);
@@ -118,6 +133,7 @@ function render() {
   document.documentElement.style.setProperty('--fs', SIZES[si] + 'px');
   document.documentElement.style.setProperty('--lh', tight ? '1.25' : '1.4');
   document.getElementById('tight').innerHTML = LINES(!tight);
+  sizeWeekLabel();
   document.getElementById('wklabel').innerHTML =
     (w.mon === mondayISO() ? '<b>This week</b> \u00b7 ' : '') + w.label;
   document.getElementById('colour').textContent = 'Colour: ' + COLOUR[ci];
