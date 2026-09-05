@@ -12,8 +12,12 @@ const esc = s => String(s == null ? '' : s)
 
 function spanHTML(s) {
   const t = esc(s.t);
-  if (!s.url) return t;                 // held back, or never a link
-  return `<a href="${esc(s.url)}" target="_blank" rel="noopener">${t}</a>`;
+  if (s.url) return `<a href="${esc(s.url)}" target="_blank" rel="noopener">${t}</a>`;
+  // held back: shown the way it looks in the planner's own student view, so a
+  // student can see something is coming. Never a link, and no address exists
+  // in this payload to make one from.
+  if (s.held) return `<span class="held">${t}</span>`;
+  return t;
 }
 
 function linesHTML(ls) {
