@@ -46,6 +46,24 @@ console.log('no rel/priv flags leak  :', !JSON.stringify(out).includes('"rel"') 
                                           !JSON.stringify(out).includes('"priv"'));
 console.log('empty cell -> null      :', redactLines([line([span('x')], {private: true})]) === null);
 
+console.log('\n--- off-day labels ---');
+eval(grab('studentReason'));
+const reasons = [
+  ['Staff Day \u2014 Convocation, PD 8\u20133', 'No school'],
+  ['Professional Day + faculty meeting', 'Professional Day'],   // reason kept, detail dropped
+  ['Thanksgiving Recess', 'Thanksgiving Recess'],
+  ['Winter Break \u2014 school reopens Jan 5', 'Winter Break'],
+  ['', 'No school']
+];
+let rbad = 0;
+for (const [raw, want] of reasons) {
+  const got = studentReason(raw);
+  if (got !== want) rbad++;
+  console.log('  ' + (got === want ? 'ok  ' : 'FAIL') + '  ' +
+    JSON.stringify(raw).padEnd(42) + '-> ' + JSON.stringify(got));
+}
+console.log('  ' + (rbad ? rbad + ' FAILED' : 'staff detail never reaches students'));
+
 console.log('\n--- horizon: the week turns over Monday at 5am ---');
 const at = (s) => horizonISO(new Date(s));
 const cases = [
