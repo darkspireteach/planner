@@ -131,4 +131,4 @@ check('no cell looks writable without a record', writable.every(e => e.dataset.f
 console.log('\\n' + (fail.length ? fail.length + ' FAILED' : 'all checks passed'));
 `;
 global.CSS = CSS;
-eval(load('data.js') + load('render.js') + load('editor.js') + load('sync.js') + probe);
+eval(load('data.js') + load('test/fixture.js') + load('render.js') + load('editor.js') + load('sync.js') + probe);
