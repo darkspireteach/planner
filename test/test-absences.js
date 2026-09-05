@@ -78,6 +78,15 @@ loadSync(); cfg.url = 'https://fake/exec'; cfg.token = 'good';
   render();
   console.log('');
   console.log('failure is announced    :', /Absences unavailable/.test(document.getElementById('classbar').innerHTML));
+
+  // an empty reply is not the same as a broken one, and must say so
+  global.fetch = async (u, o) => {
+    const req = JSON.parse(o.body);
+    if (req.action === 'absences') return {json: async () => ({ok:true, byTag:{}})};
+    return {json: async () => ({ok:true, now:'X', records:[], saved:[], conflicts:[]})};
+  };
+  await pullAbsences();
+  console.log('empty reply is reported :', /No attendance found/.test(document.getElementById('classbar').innerHTML));
   console.log('reason is shown         :', /no gradebook set up/.test(document.getElementById('classbar').innerHTML));
   global.fetch = good;
 })();
