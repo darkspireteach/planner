@@ -92,22 +92,41 @@ function fail(msg) {
   document.getElementById('app').innerHTML = '<p class="msg">' + esc(msg) + '</p>';
 }
 
-async function load() {
-  const q = new URLSearchParams(location.search);
-  const tag = (q.get('class') || q.get('cls') || '').toLowerCase();
-  if (!/^p[1-7]$/.test(tag)) { fail('Add a class to the address, like ?class=p1'); return; }
+let lastUpdated = null;
+let tag = '';
+
+async function load(quiet) {
   try {
     // the cache-buster matters: Google caches these replies, and a stale one
     // would show yesterday's plan with no sign that it was old
     const url = ENDPOINT + '?class=' + tag + '&t=' + Date.now();
     const res = await fetch(url);
     const data = await res.json();
-    if (!data.ok) { fail(data.error || 'Could not load the agenda.'); return; }
+    if (!data.ok) { if (!quiet) fail(data.error || 'Could not load the agenda.'); return; }
+    if (quiet && data.updated === lastUpdated) return;    // nothing new
+    lastUpdated = data.updated;
     render(data);
   } catch (err) {
-    fail('Could not reach the agenda. Try again in a moment.');
+    if (!quiet) fail('Could not reach the agenda. Try again in a moment.');
   }
 }
 
-if (typeof document !== 'undefined' && document.getElementById('app')) load();
+/* A Chromebook tab sits open for days. Left alone, a student would be reading
+   Monday's plan on Thursday with nothing to say it was stale — so this checks
+   for itself, and always when the tab comes back to the front. */
+function watch() {
+  setInterval(() => { if (!document.hidden) load(true); }, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
+  window.addEventListener('online', () => load(true));
+}
+
+function start() {
+  const q = new URLSearchParams(location.search);
+  tag = (q.get('class') || q.get('cls') || '').toLowerCase();
+  if (!/^p[1-7]$/.test(tag)) { fail('Add a class to the address, like ?class=p1'); return; }
+  load();
+  watch();
+}
+
+if (typeof document !== 'undefined' && document.getElementById('app')) start();
 if (typeof module !== 'undefined') module.exports = {render, linesHTML, spanHTML, dayHTML};
