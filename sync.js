@@ -23,7 +23,8 @@ let titles = {};               // url -> document name, so we ask Drive once
 /* Absences are read from the gradebook and kept in memory ONLY. They carry
    student names, and a school machine's browser storage is the last place
    those should end up — so this is deliberately absent from saveSync(). */
-let absent = {};               // 'P1|9/14' -> 'AB: Naweed E'
+let absent = {};               // 'P1|9/14' -> ['AB: Naweed E']
+let absentNote = '';           // why they are missing, when they are
 const ABSENT_CODES = ['AB', 'T', 'TE', 'TX'];
 let syncing = false, retryTimer = null;
 let syncNote = 'Not connected';
@@ -327,7 +328,11 @@ async function startSync() {
     await flush();
     try { await sendCalendar(); } catch (err) { /* it can go next time */ }
     // after the grid is up: this one opens another workbook and can be slow
-    try { await pullAbsences(); } catch (err) { /* no gradebook configured yet */ }
+    /* Do not swallow this. A gradebook that cannot be read looks exactly like a
+       day when nobody was out, and you would never know which you were seeing. */
+    try { absentNote = ''; await pullAbsences(); }
+    catch (err) { absentNote = 'Absences unavailable: ' + err.message; console.warn(absentNote); }
+    render();
     setNote(Object.keys(queue).length ? Object.keys(queue).length + ' pending' : 'Up to date');
   } catch (err) {
     setNote('Offline \u2014 ' + (Object.keys(queue).length || 'no') + ' pending');

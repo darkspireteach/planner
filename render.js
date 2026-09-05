@@ -159,7 +159,10 @@ function render() {
     `>${c.sym}\u00A0${c.tag}</button>`).join('') +
     (byClass ? '' : `<button class="cb" data-p="prep" aria-pressed="${!hidePrep}"` +
       (hidePrep ? '' : ` style="background:var(--rail);color:var(--slate)"`) + `>Prep</button>`) +
-    `<span id="hint">${student ? 'Read-only preview' : 'Click a cell to write \u00b7 paste a URL onto selected words'}</span>`;
+    `<span id="hint">${student ? 'Read-only preview'
+      : (typeof absentNote !== 'undefined' && absentNote)
+        ? '\u26a0 ' + esc(absentNote)
+        : 'Click a cell to write \u00b7 paste a URL onto selected words'}</span>`;
 
   P.length = 0;
   put(1, 1, 1, 'corner');
