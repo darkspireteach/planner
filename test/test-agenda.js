@@ -18,8 +18,11 @@ const out = document.getElementById('app').innerHTML;
 console.log('title      :', document.getElementById('title').textContent);
 console.log('stamp      :', document.getElementById('stamp').textContent);
 console.log('weeks      :', document.querySelectorAll('.week').length);
-console.log('days shown :', document.querySelectorAll('.day').length,
-            '(off days included:', document.querySelectorAll('.day.off').length + ')');
+console.log('rows shown :', document.querySelectorAll('.row').length,
+            '(off days:', document.querySelectorAll('.row.off').length + ')');
+console.log('columns    :', document.querySelectorAll('.row .col').length, 'content cells');
+console.log('quick links:', document.querySelectorAll('.bar a').length);
+console.log('striped    :', document.querySelectorAll('.row.alt').length, 'shaded rows');
 console.log('');
 
 const links = [...document.querySelectorAll('a')];
@@ -42,6 +45,7 @@ console.log('');
 console.log('bullets kept        :', document.querySelectorAll('.ln.b').length);
 console.log('blank lines kept    :', document.querySelectorAll('.gap').length);
 console.log('off day reason shown:', /Staff Day/.test(out));
+console.log('date and block present:', /class="when">Wed Sep 2/.test(out) && /class="blk">Block 1/.test(out));
 console.log('no teacher markup   :', !out.includes('pvs') && !out.includes('pend') &&
             !out.includes('data-u') && !out.includes('Absent'));
 
