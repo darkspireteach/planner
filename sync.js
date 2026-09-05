@@ -257,8 +257,12 @@ async function pullAbsences() {
     }
   }
   absent = out;
+  const n = Object.keys(out).length;
+  // "the gradebook answered with nothing" and "the gradebook could not be read"
+  // look identical on screen otherwise, and only one of them is your fault
+  absentNote = n ? '' : 'No attendance found — check the Gradebook tab mapping';
   render();
-  return Object.keys(out).length;
+  return n;
 }
 
 /* ---------- document titles ---------- */
