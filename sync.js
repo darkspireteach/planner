@@ -277,6 +277,29 @@ async function linkTitle(url) {
   }
 }
 
+/* ---------- publishing to the student pages ---------- */
+
+/* The endpoint publishes on its own every 15 minutes. This is for when that is
+   too slow — you have just fixed something and want it out now. */
+async function publishNow(btn) {
+  if (!cfg.url || !cfg.token) { setPub('Not connected'); return; }
+  setPub('Publishing\u2026');
+  try {
+    const d = await call('publish', {});
+    const n = Object.keys(d.classes || {}).length;
+    setPub('Published ' + new Date().toLocaleTimeString(undefined,
+      {hour: 'numeric', minute: '2-digit'}));
+    if (!n) setPub('Nothing to publish');
+  } catch (err) {
+    setPub('Publish failed');
+  }
+}
+
+function setPub(t) {
+  const el = document.getElementById('publish');
+  if (el) el.textContent = t;
+}
+
 /* ---------- status ---------- */
 
 function setNote(t) {
@@ -317,6 +340,8 @@ function wireSync() {
   loadSync();
   const btn = document.getElementById('sync');
   if (btn) btn.onclick = e => { if (e.shiftKey || !cfg.url) connect(); else startSync(); };
+  const pub = document.getElementById('publish');
+  if (pub) pub.onclick = () => publishNow();
   window.addEventListener('online', () => startSync());
   setNote(cfg.url ? 'Connecting\u2026' : 'Not connected');
   startSync();
