@@ -65,7 +65,20 @@ const dest2 = cells.find(c => c !== src && c !== dest1 && recOf(c).course && !re
 const closedForm = lines(source);
 console.log('from closed cell:', JSON.stringify(summarise(fakePaste(dest2, closedForm))));
 
-// 3. exactly what Chrome puts on the clipboard: wrapper + fragment comments
+// 3. the wrapper's own newlines must not become blank lines at the top
+closeCell();
+const destA = cells.find(c => ![src].includes(c) && recOf(c).course && !recOf(c)[c.dataset.f]);
+const NL = String.fromCharCode(10);
+const wrapped = "<meta charset='utf-8'>" + NL + "<!--StartFragment-->" + NL +
+                openForm + NL + "<!--EndFragment-->" + NL;
+const backA = fakePaste(destA, wrapped);
+// the source itself has a blank at index 1, so compare shapes rather than guess
+const shape = ls => ls.map(l => l === null ? '_' : 'x').join('');
+console.log('no wrapper blanks    :', backA[0] !== null &&
+            shape(backA) === shape(source),
+            '| got', shape(backA), 'want', shape(source));
+
+// 4. exactly what Chrome puts on the clipboard: wrapper + fragment comments
 closeCell();
 const dest3 = cells.find(c => ![src,dest1,dest2].includes(c) && recOf(c).course && !recOf(c)[c.dataset.f]);
 const chrome = "<meta charset='utf-8'><!--StartFragment-->" + openForm + "<!--EndFragment-->";
