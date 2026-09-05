@@ -167,7 +167,7 @@ function render() {
   P.length = 0;
   put(1, 1, 1, 'corner');
   w.days.forEach((d, i) => put(i + 2, 1, 1, 'dh', '',
-    `<b>${d.d}</b><span>${d.cycle ? 'Day ' + d.cycle : esc(noteText(d) || 'No school')}</span>` +
+    `<b>${d.d}</b><span>${d.cycle ? 'Day ' + d.cycle : 'No school'}</span>` +
     (student ? '' : `<div class="dhnote" data-w="${wi}" data-d="${i}" ` +
       `data-f="note" data-h="${wi}.${i}.n">${lines(d.noteLines)}</div>`)));
 

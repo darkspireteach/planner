@@ -72,8 +72,7 @@ button[hidden]{display:none}
 .grid > .dh, .grid > .corner{border-top:0}
 /* block boundary: the one strong rule. everything inside a block stays light. */
 .bt{border-top:2px solid var(--rule)}
-/* ASP hangs below the absence line, so mark where the block proper ends */
-.asp-row, .asp-lbl{border-top:1px dashed var(--rule)}
+
 .dh{background:var(--paper);padding:.5em .7em;position:sticky;top:37px;z-index:10}
 .dh b{display:block;font-size:1.05em;font-weight:600}
 .dh span{font-size:.92em;color:var(--mute)}
