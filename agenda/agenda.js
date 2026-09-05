@@ -30,24 +30,39 @@ function field(name, ls) {
   return `<div class="fld"><h4>${name}</h4>${linesHTML(ls)}</div>`;
 }
 
-function dayHTML(d) {
+/* One row per meeting: date, block, class work, homework — side by side on a
+   Chromebook, stacked only when the screen is too narrow for two columns. */
+function dayHTML(d, stripe) {
+  const z = stripe ? ' alt' : '';
   if (d.off) {
-    return `<section class="day off"><h3>${esc(d.d)}</h3>` +
-           `<p class="note">${esc(d.off)}</p></section>`;
+    return `<div class="row off${z}"><div class="when">${esc(d.d)}</div>` +
+           `<div class="blk"></div><div class="note" role="note">${esc(d.off)}</div></div>`;
   }
   const meets = (d.meets || []).filter(m => m.cw || m.hw);
   if (!meets.length) return '';         // met, nothing posted: say nothing
-  return `<section class="day"><h3>${esc(d.d)}</h3>` +
-    meets.map(m => field('Class work', m.cw) + field('Homework', m.hw)).join('') +
-    '</section>';
+  return meets.map((m, i) =>
+    `<div class="row${z}">` +
+      `<div class="when">${i ? '' : esc(d.d)}</div>` +
+      `<div class="blk">${esc(m.block || '')}</div>` +
+      `<div class="col">${field('Class work', m.cw)}</div>` +
+      `<div class="col">${field('Homework', m.hw)}</div>` +
+    '</div>').join('');
+}
+
+function linkBar(links) {
+  if (!links || !links.length) return '';
+  return '<nav class="bar">' + links.map(l =>
+    `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`
+  ).join('') + '</nav>';
 }
 
 function render(data) {
   const app = document.getElementById('app');
   const c = data.course;
-  document.getElementById('title').textContent =
-    c ? c.name + (c.sec ? ' ' + c.sec : '') : 'Class agenda';
-  document.title = c ? c.name + ' — agenda' : 'Class agenda';
+  // period, not section — students know their class by the period they have it
+  const heading = c ? (c.tag ? c.tag + ' ' : '') + c.name : 'Class agenda';
+  document.getElementById('title').textContent = heading;
+  document.title = c ? heading + ' \u2014 agenda' : 'Class agenda';
   if (c && c.fill) document.documentElement.style.setProperty('--accent', c.ink || '#1B3A5C');
 
   if (data.updated) {
@@ -59,13 +74,18 @@ function render(data) {
 
   const weeks = (data.weeks || [])
     .map(w => {
-      const days = (w.days || []).map(dayHTML).join('');
+      let stripe = 0;
+      const days = (w.days || []).map(d => {
+        const html = dayHTML(d, stripe);
+        if (html) stripe = 1 - stripe;            // shade by day, not by row
+        return html;
+      }).join('');
       return days ? `<section class="week"><h2>${esc(w.label)}</h2>${days}</section>` : '';
     })
     .filter(Boolean);
 
-  app.innerHTML = weeks.length ? weeks.join('')
-    : '<p class="msg">Nothing posted yet.</p>';
+  app.innerHTML = linkBar(data.links) +
+    (weeks.length ? weeks.join('') : '<p class="msg">Nothing posted yet.</p>');
 }
 
 function fail(msg) {
