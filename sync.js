@@ -1,0 +1,282 @@
+/* Sync.
+ *
+ * The endpoint owns the records; this is a client with a cache. Nothing here
+ * invents a timestamp — every version stamp comes back from the server, so
+ * three machines with three slightly wrong clocks never enters into it.
+ *
+ * The URL and token live in this browser's storage, one machine at a time, and
+ * are never in the repo.
+ *
+ * Records are keyed by date and period rather than by grid position, so a plan
+ * belongs to a class meeting rather than to a slot in a week.
+ */
+
+const SYNC_KEY = 'planner.sync.v1';
+const RETRY_MS = 20000;
+
+let cfg = {url: '', token: '', device: ''};
+let base = {};                 // key -> the updatedAt we last saw from the server
+let queue = {};                // key -> lines waiting to go out
+let lastPull = '';
+let titles = {};               // url -> document name, so we ask Drive once
+
+/* Absences are read from the gradebook and kept in memory ONLY. They carry
+   student names, and a school machine's browser storage is the last place
+   those should end up — so this is deliberately absent from saveSync(). */
+let absent = {};               // 'P1|9/14' -> 'AB: Naweed E'
+const ABSENT_CODES = ['AB', 'T', 'TE', 'TX'];
+let syncing = false, retryTimer = null;
+let syncNote = 'Not connected';
+
+function loadSync() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SYNC_KEY) || '{}');
+    cfg = Object.assign(cfg, s.cfg || {});
+    base = s.base || {};
+    queue = s.queue || {};
+    titles = s.titles || {};
+    /* lastPull is deliberately NOT restored. The model is rebuilt from data.js
+       on every load, so the client starts each session knowing nothing — an
+       incremental pull would ask for "changes since my last write" and get back
+       nothing, leaving the page showing stale built-in content. The first pull
+       of a session is always a full one; later pulls in the same session can be
+       incremental because the model is live by then. */
+    lastPull = '';
+  } catch (e) { /* first run, or storage unavailable */ }
+  if (!cfg.device) {
+    cfg.device = (navigator.platform || 'browser').split(' ')[0] + '-' +
+                 Math.random().toString(36).slice(2, 6);
+  }
+}
+
+function saveSync() {
+  try {
+    localStorage.setItem(SYNC_KEY, JSON.stringify({cfg, base, queue, titles}));
+  } catch (e) { /* storage unavailable: the queue lives only for this session */ }
+}
+
+/* ---------- record keys ---------- */
+
+/** date + period, with ASP marked, e.g. 2026-09-02|P5a|cw */
+function recKey(w, d, bi, f) {
+  const day = WEEKS[w].days[d];
+  if (!day.iso) return null;
+  if (f === 'note') return day.iso + '|day|note';
+  const b = day.blocks[bi];
+  if (!b) return null;
+  if (f === 'prep') return day.iso + '|P' + b.period + (b.asp ? 'a' : '') + '|prep';
+  if (!b.course) return null;
+  return day.iso + '|P' + b.period + (b.asp ? 'a' : '') + '|' + f;
+}
+
+/** the reverse, so a pulled record can find its cell */
+function findRecord(key) {
+  const [iso, per, f] = String(key).split('|');
+  if (per === 'day') {
+    for (const [w, wk] of WEEKS.entries())
+      for (const [d, day] of wk.days.entries())
+        if (day.iso === iso) return {w, d, bi: null, f: 'noteLines'};
+    return null;
+  }
+  const asp = per.endsWith('a');
+  const p = parseInt(per.replace(/^P|a$/g, ''), 10);
+  const wantPrep = f === 'prep';                     // prep blocks have no course
+  for (const [w, wk] of WEEKS.entries())
+    for (const [d, day] of wk.days.entries()) {
+      if (day.iso !== iso) continue;
+      for (const [bi, b] of day.blocks.entries())
+        if (b.period === p && !!b.asp === asp && (wantPrep ? !b.course : !!b.course))
+          return {w, d, bi, f};
+    }
+  return null;
+}
+
+/* ---------- transport ---------- */
+
+/* text/plain on purpose: application/json makes the browser send a preflight,
+   and Apps Script has no way to answer one. The server parses the body either
+   way, so the request stays "simple" and the round trip works. */
+async function call(action, body) {
+  if (!cfg.url || !cfg.token) throw new Error('not connected');
+  const res = await fetch(cfg.url, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(Object.assign({action, token: cfg.token, device: cfg.device}, body))
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'endpoint refused');
+  return data;
+}
+
+/* ---------- pull ---------- */
+
+async function pullNow() {
+  const data = await call('pull', {since: lastPull});
+  let applied = 0, missed = 0;
+  for (const rec of data.records || []) {
+    const at = findRecord(rec.key);
+    base[rec.key] = rec.updatedAt;
+    if (!at) { missed++; continue; }       // a date or class not in this build
+    if (queue[rec.key] !== undefined) continue;   // ours is newer and still unsent
+    const holder = at.bi === null ? WEEKS[at.w].days[at.d] : WEEKS[at.w].days[at.d].blocks[at.bi];
+    holder[at.f] = rec.lines && rec.lines.length ? rec.lines : null;
+    applied++;
+  }
+  if (missed) console.warn('sync: ' + missed + ' record(s) had no matching cell');
+  lastPull = data.now;
+  saveSync();
+  if (applied) render();
+  return applied;
+}
+
+/* ---------- push ---------- */
+
+/** called when a cell closes; the write goes out on the next flush */
+function syncChange(cell, lines) {
+  const key = recKey(cell.dataset.w, cell.dataset.d, cell.dataset.bi, cell.dataset.f);
+  if (!key) return;
+  queue[key] = lines || null;
+  saveSync();
+  flush();
+}
+
+async function flush() {
+  if (syncing || !cfg.url) return;
+  const keys = Object.keys(queue);
+  if (!keys.length) { setNote('Up to date'); return; }
+  syncing = true;
+  setNote('Saving\u2026');
+  try {
+    const records = keys.map(k => ({key: k, lines: queue[k], base: base[k] || ''}));
+    const data = await call('push', {records});
+    for (const s of data.saved || []) {
+      base[s.key] = s.updatedAt;
+      delete queue[s.key];                 // only clear what the server confirmed
+    }
+    for (const c of data.conflicts || []) {
+      base[c.key] = c.updatedAt;
+      onConflict(c);
+    }
+    lastPull = data.now;
+    saveSync();
+    setNote(Object.keys(queue).length ? Object.keys(queue).length + ' pending' : 'Saved');
+  } catch (err) {
+    saveSync();                                 // don't rely on the caller having saved
+    setNote('Offline \u2014 ' + Object.keys(queue).length + ' pending');
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(flush, RETRY_MS);   // the queue is on disk; it can wait
+  } finally {
+    syncing = false;
+  }
+}
+
+/**
+ * Someone else wrote this record while we were away. The write is refused
+ * rather than applied, and both versions are kept: theirs goes into the grid,
+ * ours stays queued and is offered back. Last-writer-wins is how an evening
+ * of planning disappears without anyone noticing.
+ */
+function onConflict(c) {
+  const at = findRecord(c.key);
+  const mine = queue[c.key];
+  delete queue[c.key];
+  if (!at) return;
+  const rec = at.bi === null ? WEEKS[at.w].days[at.d] : WEEKS[at.w].days[at.d].blocks[at.bi];
+  rec[at.f] = c.lines && c.lines.length ? c.lines : null;
+  render();
+  const el = document.querySelector(at.bi === null
+    ? '[data-f="note"][data-h="' + at.w + '.' + at.d + '.n"]'
+    : '[data-h="' + at.w + '.' + at.d + '.' + at.bi + '"][data-f="' + at.f + '"]');
+  const where = c.key.split('|').slice(0, 2).join(' ');
+  const keep = window.confirm(
+    where + ' was changed on ' + (c.device || 'another machine') + ' at ' +
+    new Date(c.updatedAt).toLocaleString() + '.\n\n' +
+    'That version is now on screen.\n\n' +
+    'OK to replace it with yours, Cancel to keep theirs.');
+  if (keep) { queue[c.key] = mine; saveSync(); flush(); }
+  else if (el) el.classList.add('sel');
+}
+
+/* ---------- absences, read-only ---------- */
+
+async function pullAbsences() {
+  const data = await call('absences', {});
+  const out = {};
+  for (const tag of Object.keys(data.byTag || {})) {
+    const days = data.byTag[tag];
+    for (const day of Object.keys(days)) {
+      const codes = days[day], parts = [];
+      // one line per code, so lateness reads separately from absence
+      for (const c of ABSENT_CODES) {
+        if (codes[c] && codes[c].length) parts.push(c + ': ' + codes[c].join(', '));
+      }
+      // a day only reaches us once it has been taken, so an empty one means
+      // everybody was there — which is worth saying, unlike silence
+      out[tag + '|' + day] = parts.length ? parts : ['All here'];
+    }
+  }
+  absent = out;
+  render();
+  return Object.keys(out).length;
+}
+
+/* ---------- document titles ---------- */
+
+/** Ask the endpoint what a Drive link is called. Empty means "no idea" — the
+ *  caller keeps whatever label it had rather than showing an error. */
+async function linkTitle(url) {
+  if (!url || !cfg.url || !cfg.token) return '';
+  if (titles[url] !== undefined) return titles[url];
+  try {
+    const d = await call('title', {url});
+    titles[url] = d.title || '';
+    saveSync();
+    return titles[url];
+  } catch (err) {
+    return '';
+  }
+}
+
+/* ---------- status ---------- */
+
+function setNote(t) {
+  syncNote = t;
+  const el = document.getElementById('sync');
+  if (el) el.textContent = t;
+}
+
+function connect() {
+  const url = window.prompt('Sync URL (the /exec address)', cfg.url || '');
+  if (url === null) return;
+  const token = window.prompt('Token', cfg.token || '');
+  if (token === null) return;
+  cfg.url = url.trim();
+  cfg.token = token.trim();
+  saveSync();
+  startSync();
+}
+
+async function startSync() {
+  if (!cfg.url || !cfg.token) { setNote('Not connected'); return; }
+  setNote('Connecting\u2026');
+  try {
+    await pullNow();
+    await flush();
+    // after the grid is up: this one opens another workbook and can be slow
+    try { await pullAbsences(); } catch (err) { /* no gradebook configured yet */ }
+    setNote(Object.keys(queue).length ? Object.keys(queue).length + ' pending' : 'Up to date');
+  } catch (err) {
+    setNote('Offline \u2014 ' + (Object.keys(queue).length || 'no') + ' pending');
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(startSync, RETRY_MS);
+  }
+}
+
+function wireSync() {
+  loadSync();
+  const btn = document.getElementById('sync');
+  if (btn) btn.onclick = e => { if (e.shiftKey || !cfg.url) connect(); else startSync(); };
+  window.addEventListener('online', () => startSync());
+  setNote(cfg.url ? 'Connecting\u2026' : 'Not connected');
+  startSync();
+}

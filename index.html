@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson planner</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div class="weeknav">
+    <button id="prev" title="Previous week">&larr;</button>
+    <div class="wk" id="wklabel"></div>
+    <button id="next" title="Next week">&rarr;</button>
+  </div>
+  <nav>
+    <button id="smaller" title="Smaller text">A&darr;</button>
+    <button id="bigger" title="Larger text">A&uarr;</button>
+    <button id="tight" aria-pressed="false" title="Line spacing"></button>
+    <button id="colour">Colour: tinted</button>
+    <span class="sep"></span>
+    <button id="tview">By class</button>
+    <button id="tstu">Student view</button>
+    <span class="sep"></span>
+    <button id="sync" title="Click to sync now, shift-click to set the URL and token">Not connected</button>
+  </nav>
+  <h1>Lesson planner</h1>
+  <div class="classbar" id="classbar"><b>Classes</b></div>
+</header>
+
+<main id="app"></main>
+
+<div id="pop"></div>
+
+<div id="bar"><b></b><span></span></div>
+
+<script src="data.js"></script>
+<script src="render.js"></script>
+<script src="editor.js"></script>
+<script src="sync.js"></script>
+<script>start();</script>
+</body>
+</html>

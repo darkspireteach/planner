@@ -1,2 +1,58 @@
-# planner
-This is my weekly planner
+# Lesson planner
+
+A static page that plans my week and syncs through an Apps Script endpoint.
+No build step, no dependencies, nothing fetched from the network.
+
+Separate repo, deployment and token from the homework app at `/hw`. This one
+must never touch that one.
+
+## Files
+
+| | |
+|---|---|
+| `index.html` | the page |
+| `styles.css` | all styling, plus the `@font-face` rules |
+| `data.js` | the calendar: weeks, days, rotation, courses |
+| `render.js` | both week views, the toolbar, view preferences |
+| `editor.js` | in-place editing, links as records, undo |
+| `sync.js` | pull, queued push, version guard, offline queue |
+| `fonts/` | Source Sans 3, three faces, shipped deliberately |
+| `test/` | `node audit.js` for the constraints, `test-*.js` for behaviour |
+
+## Putting it online
+
+1. Make a **new** repo — not the homework one. Public is fine; nothing secret
+   lives here, and the token is entered per machine at runtime.
+2. Upload everything in this folder, keeping `fonts/` and `test/` as folders.
+3. **Settings ▸ Pages ▸ Source: Deploy from a branch ▸ main ▸ / (root) ▸ Save.**
+4. Wait a minute, then open the URL it gives you.
+5. On each machine: shift-click **Sync**, paste the `/exec` URL and the token.
+   That is stored in that browser and never in this repo.
+
+## The endpoint
+
+`Sync.gs` lives in the planner spreadsheet's Apps Script, alongside `Publish.gs`
+— it calls that file's gradebook readers rather than duplicating them.
+
+After changing `Sync.gs`: **Deploy ▸ Manage deployments ▸** pencil **▸ Version:
+New version ▸ Deploy.** The URL and token stay the same.
+
+## Tests
+
+    cd test
+    npm install          # jsdom, once
+    node run-all.js      # the audit, then every behaviour test
+    node audit.js        # just the constraints
+
+`audit.js` enforces what must never break: five weekday columns, absences and
+private notes kept out of the student view, held links carrying no URL, student
+names never written to the machine, no red/green pair, and nothing loaded from
+the network. Keep it green.
+
+## Not done yet
+
+- The student page: published JSON, one page per class.
+- The one-time import from the sheet — must run inside Apps Script against the
+  live rich text, since an `.xlsx` export drops most of the links.
+- Reading `Courses` and `Build Calendar`, so `data.js` stops being hardcoded.
+  Until then the calendar ends where the sheet's built weeks end.

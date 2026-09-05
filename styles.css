@@ -1,0 +1,200 @@
+/* Source Sans 3, shipped in the repo rather than fetched from Google, so the
+   page renders identically on all three machines and works with no network.
+   Only the three faces the app uses: regular, semibold, and regular italic. */
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:400;
+  font-display:swap;src:url(fonts/source-sans-3-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:600;
+  font-display:swap;src:url(fonts/source-sans-3-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Source Sans 3";font-style:italic;font-weight:400;
+  font-display:swap;src:url(fonts/source-sans-3-latin-400-italic.woff2) format("woff2")}
+
+:root{
+  --fs:12.5px; --lh:1.4;
+  --font:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --paper:#F7F8F9; --card:#FFFFFF; --ink:#16202B; --slate:#5F6E7B;
+  --mute:#8B97A2; --hair:#BCC5CC; --rule:#55646F; --rail:#E7EBEE;
+  --link:#0B4C81; --held:#3D4A56; --off:#E4E8EB;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:14px/1.45 var(--font)}
+/* grid, not flex-wrap: the title stays pinned to the top right at any width
+   instead of trailing whichever row the buttons happen to wrap onto */
+header{position:sticky;top:0;z-index:20;background:var(--paper);
+  border-bottom:1px solid var(--hair);padding:8px 14px;
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  gap:7px 14px;align-items:baseline}
+h1{grid-column:3;grid-row:1;justify-self:end;margin:0;
+  font-size:17px;font-weight:600;color:var(--slate);letter-spacing:.01em}
+.weeknav{grid-column:1;grid-row:1;display:flex;align-items:center;gap:7px}
+.weeknav button{font-size:13px;padding:1px 9px;line-height:1.25;color:var(--ink)}
+.wk{font-size:17px;color:var(--slate);min-width:13em;text-align:center;
+  white-space:nowrap}
+.wk b{color:var(--ink);font-weight:700}
+/* wide: date left, buttons centred, title right, all on one line.
+   narrow: buttons drop to their own row rather than crushing the date. */
+nav{grid-column:2;grid-row:1;justify-self:center;
+  display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+@media (max-width:1150px){
+  nav{grid-column:1/-1;grid-row:2;justify-self:center}
+}
+.sep{width:1px;height:18px;background:var(--hair);margin:0 3px}
+button{font:inherit;font-size:10.5px;background:var(--card);color:var(--slate);
+  border:1px solid var(--hair);border-radius:4px;padding:1px 6px;cursor:pointer}
+button:hover{border-color:var(--slate)}
+button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+nav #tight{padding:3px 7px;line-height:0}
+nav #tight svg{width:13px;height:13px;fill:none;stroke:currentColor;
+  stroke-width:1.5;stroke-linecap:round}
+button[hidden]{display:none}
+.classbar{grid-column:1/-1;display:flex;gap:4px;align-items:center;flex-wrap:wrap;
+  padding-top:6px;margin-top:3px;border-top:1px solid var(--hair)}
+.classbar>b{font-size:10.5px;font-weight:600;color:var(--slate)}
+.cb{font:inherit;font-size:10.5px;border-radius:4px;padding:1px 6px;cursor:pointer;
+  border:1px solid transparent}
+.cb[aria-pressed=false]{background:var(--paper);color:var(--mute);
+  border:1px dashed var(--hair);text-decoration:line-through}
+
+/* minmax(0,...) or a long pasted URL sets the column's minimum width.
+   Borders are drawn per cell rather than by a grid gap, so every internal
+   rule is provably the same weight instead of depending on how the gap
+   happens to fall between two backgrounds. */
+.grid{display:grid;grid-template-columns:5em repeat(5,minmax(0,1fr));gap:0;
+  background:var(--hair);border-bottom:2px solid var(--rule);font-size:var(--fs)}
+.grid > *{border-top:1px solid var(--hair);border-left:1px solid var(--hair)}
+.grid > .dh, .grid > .corner{border-top:0}
+/* block boundary: the one strong rule. everything inside a block stays light. */
+.bt{border-top:2px solid var(--rule)}
+/* ASP hangs below the absence line, so mark where the block proper ends */
+.asp-row, .asp-lbl{border-top:1px dashed var(--rule)}
+.dh{background:var(--paper);padding:.5em .7em;position:sticky;top:37px;z-index:10}
+.dh b{display:block;font-size:1.05em;font-weight:600}
+.dh span{font-size:.92em;color:var(--mute)}
+.dhnote{font-size:.92em;color:var(--slate);margin-top:.2em;
+  padding:.1em .3em .1em .5em;border-left:2px solid transparent;min-height:1.1em}
+.dhnote:empty{border-left-color:var(--hair)}
+.dhnote:not(:empty){border-left-color:var(--slate)}
+.dhnote:hover{box-shadow:inset 0 0 0 1px var(--rule)}
+.dhnote[contenteditable="true"]{outline:2px solid var(--link);outline-offset:-2px;
+  background:#fff}
+.ed-off .dhnote{display:none}
+.corner{background:var(--paper)}
+
+/* left rail: one cell per grid row */
+.rb{background:var(--rail);padding:.45em .35em;text-align:center;line-height:1.2}
+.rb b{display:block;font-size:1.02em;font-weight:600}
+.rb span{font-size:.84em;color:var(--slate)}
+.rl{background:var(--rail);padding:.4em .5em;font-size:.82em;font-weight:600;
+  color:var(--slate);text-align:right;line-height:1.2}
+.rc{padding:.45em .5em;line-height:1.2}
+.rc b{display:block;font-size:1.02em;font-weight:600}
+.rc span{font-size:.82em;opacity:.85}
+
+.cell{background:var(--card);min-height:1.6em;min-width:0}
+.cell.off{background:var(--off)}
+.cell.prep{background:#FCFCFD}
+.prephd{background:var(--rail);color:var(--slate)}
+.prepbox{background:#FCFCFD}
+.chd{padding:.3em .6em;font-size:.98em;line-height:1.25}
+.chd .tg{font-weight:600;white-space:nowrap}
+.chd .nm{font-weight:400;font-size:.88em;opacity:.8}
+.chd .heldn{float:right;margin-left:.4em}
+.mlab{padding:.3em .6em;font-size:.9em;font-weight:600;color:var(--slate);
+  display:flex;align-items:baseline;gap:.4em}
+/* Every cell carries a blank line's worth of space at the foot, so one cell's
+   last line never sits hard against the next cell's first. It is padding, not a
+   line in the record — nothing is added to what gets saved or published.
+   An empty cell still stands as tall as a written one: two paddings, a line of
+   text and that trailing blank. */
+.sub{padding:.35em .6em calc(.5em + var(--lh) * 1em);
+  min-height:calc(.85em + var(--lh) * 2em)}
+/* the absence row is the last in a block, so the boundary rule already
+   separates it — no trailing blank line needed */
+.allhere{color:var(--mute);font-style:italic}
+.abs{font-size:.9em;color:var(--slate);
+  padding-bottom:.5em;min-height:calc(.85em + var(--lh) * 1em)}
+.ln{margin:0;line-height:var(--lh);overflow-wrap:anywhere}
+/* A real list item, so the wrapped lines hang under the text and the browser
+   places the marker. Flex also gave the right indent, but it turns every inline
+   element into its own flex item — a line with two links became two columns. */
+.ln.b{display:list-item;list-style:disc outside;margin-left:1em}
+.ln.b::marker{color:var(--mute);font-size:.85em}
+.gap{height:.45em}
+.pv{color:var(--mute);font-style:italic;padding-left:.5em;
+  border-left:2px solid var(--hair)}
+/* A closed cell shows a (( )) note in single brackets, to set it off from the
+   line around it. They are drawn by CSS, not stored and not part of the text —
+   so they cannot be copied out and cannot double up on a round trip. */
+.pvs{color:var(--mute);font-style:italic}
+.pvs::before{content:"("}
+.pvs::after{content:")"}
+/* a link inside hidden text reads as hidden text: the dashed box and the
+   underline both draw in currentColor, so setting the colour carries them */
+.pv a.l, .pv a.h, .pvs a.l, .pvs a.h{color:var(--mute)}
+/* inside hidden text the box is quiet enough, and lighter than bold would be */
+.pv a.l, .pvs a.l{font-weight:400}
+.pv a.h, .pvs a.h{font-weight:400;text-decoration:none;
+  border:1px dashed currentColor;border-radius:3px;padding:0 .25em;
+  box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.pend{font-weight:600;text-decoration:underline dotted;
+  text-decoration-color:var(--slate);text-decoration-thickness:1px;
+  text-underline-offset:3px}
+.asp{margin-top:.5em;padding-top:.4em;border-top:1px dotted var(--hair)}
+.asp>h5{margin:0 0 .1em;font-size:.8em;font-weight:600;color:var(--mute)}
+
+/* Released is the prominent one — it is the live link. Held back is quieter:
+   lighter, unbolded, dotted. Weight, colour and underline all differ. */
+a.l{color:var(--link);font-weight:600;text-decoration:underline;
+  text-underline-offset:2px;text-decoration-thickness:1.5px}
+/* Held back: bold with a dotted underline. The dashed box read as too loud in
+   running text and broke the line; dotted matches what the student preview
+   already uses for held text, so the same mark means the same thing in both. */
+a.h{color:var(--ink);font-weight:400;text-decoration:underline dotted;
+  text-decoration-color:currentColor;text-decoration-thickness:1px;
+  text-underline-offset:2px}
+.heldn{font-weight:500;font-size:.8em;color:var(--held);border:1px dashed currentColor;
+  border-radius:3px;padding:0 .3em;white-space:nowrap;opacity:.8}
+a:focus-visible{outline:2px solid var(--link);outline-offset:1px}
+.quiet{color:var(--mute);font-size:.9em;padding:.4em .6em;font-style:italic}
+.offtag{padding:.5em .6em;font-size:.95em;color:var(--slate)}
+
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--ink);
+  color:#E8EDF1;font-size:12px;padding:6px 14px;display:flex;gap:12px;
+  align-items:center;transform:translateY(100%);transition:transform .12s}
+#bar.on{transform:none}
+#bar b{font-weight:600;flex:0 0 auto}
+#bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8}
+@media (prefers-reduced-motion:reduce){#bar{transition:none}}
+
+/* ---------- editing ---------- */
+.cell.sub[data-f]{cursor:text}
+.cell.sub[data-f]:hover{box-shadow:inset 0 0 0 1px var(--rule)}
+.cell.sub.sel{outline:2px solid var(--slate);outline-offset:-2px}
+.cell.sub[contenteditable="true"]{outline:2px solid var(--link);outline-offset:-2px;
+  background:#fff !important;cursor:text}
+.cell.sub[contenteditable="true"] .ln{min-height:1.2em}
+.cell.sub[contenteditable="true"] a{cursor:pointer}
+.ed-off .cell.sub[data-f]{cursor:default}
+.ed-off .cell.sub[data-f]:hover{box-shadow:none}
+
+#pop{position:absolute;z-index:40;background:#fff;border:1px solid var(--rule);
+  border-radius:7px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:4px;
+  font-family:var(--font);display:none}
+#pop.on{display:block}
+#pop .row{display:flex;gap:2px}
+#pop .row button{padding:5px;border:1px solid transparent;background:none;
+  border-radius:5px;line-height:0;cursor:pointer}
+#pop .row button:hover{background:var(--rail);border-color:var(--hair)}
+#pop svg{width:16px;height:16px;fill:none;stroke:var(--ink);stroke-width:1.4;
+  stroke-linecap:round;stroke-linejoin:round}
+#pop svg.w2{stroke-width:2}          /* drawn on a 24 grid, so thicken to match */
+#pop .ed{display:none;gap:4px;padding:5px 3px 3px;margin-top:3px;
+  border-top:1px solid var(--hair)}
+#pop.editing .ed{display:flex}
+#pop .flash{padding:5px 10px;font-size:12.5px;white-space:nowrap}
+#pop .ed{flex-direction:column;align-items:stretch;width:290px}
+#pop .ed input{font:inherit;font-size:12px;padding:4px 6px;margin-bottom:5px;
+  border:1px solid var(--hair);border-radius:4px}
+#pop .ed button{font-size:12px;padding:3px 8px}
+#hint{font-size:11px;color:var(--mute);margin-left:auto}
