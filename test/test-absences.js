@@ -64,6 +64,22 @@ loadSync(); cfg.url = 'https://fake/exec'; cfg.token = 'good';
   // class view too
   byClass = true; render();
   console.log('class view shows them   :', /AB: N Emami/.test(grid()));
+
+  // a gradebook that cannot be read must SAY so, not look like a quiet day
+  byClass = false;
+  const good = global.fetch;
+  global.fetch = async (u, o) => {
+    const req = JSON.parse(o.body);
+    if (req.action === 'absences') return {json: async () => ({ok:false, error:'no gradebook set up'})};
+    return {json: async () => ({ok:true, now:'X', records:[], saved:[], conflicts:[]})};
+  };
+  absent = {}; absentNote = '';
+  try { await pullAbsences(); } catch (e) { absentNote = 'Absences unavailable: ' + e.message; }
+  render();
+  console.log('');
+  console.log('failure is announced    :', /Absences unavailable/.test(document.getElementById('classbar').innerHTML));
+  console.log('reason is shown         :', /no gradebook set up/.test(document.getElementById('classbar').innerHTML));
+  global.fetch = good;
 })();
 `;
 eval(load('data.js') + load('test/fixture.js') + load('render.js') + load('editor.js') + load('sync.js') + probe);
