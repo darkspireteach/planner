@@ -9,8 +9,14 @@
   font-display:swap;src:url(../fonts/source-sans-3-latin-400-italic.woff2) format("woff2")}
 
 :root{
-  --sticky:62px;
-  --accent:#1B3A5C; --ink:#16202B; --slate:#5F6E7B; --mute:#8B97A2;
+  /* --accent is the course's own colour: the header rule and the week banner,
+     so a student can tell one agenda from another at a glance.
+     --link is deliberately NOT the course colour. A link has to read as a link
+     first; P2's brown at the same weight as P1's navy looks thinner and less
+     tappable, which is a difference in colour pretending to be a difference in
+     importance. */
+  --accent:#1B3A5C; --link:#0B4C81;
+  --ink:#16202B; --slate:#5F6E7B; --mute:#8B97A2;
   --hair:#DDE3E8; --paper:#FFFFFF; --band:#F3F5F7;
 }
 *{box-sizing:border-box}
@@ -25,7 +31,9 @@ h1{margin:0;font-size:19px;font-weight:600;color:var(--accent)}
 
 main{max-width:78rem;margin:0 auto;padding:0 14px 48px}
 
-.week>h2{position:sticky;top:var(--sticky);margin:20px 0 0;padding:6px 10px;
+/* not sticky: it slides down the page as you scroll, which is distracting on a
+   page you read straight through */
+.week>h2{margin:20px 0 0;padding:6px 10px;
   background:var(--accent);color:#fff;font-size:12.5px;font-weight:600;
   letter-spacing:.06em;border-radius:3px}
 
@@ -68,12 +76,12 @@ main{max-width:78rem;margin:0 auto;padding:0 14px 48px}
      own heading weight. A small grey label alone would go unread. */
   .col + .col{border-left:0;padding-left:0;
     margin-top:12px;padding-top:11px;border-top:2px solid var(--accent)}
-  .fld>h4{font-size:12.5px;color:var(--accent);letter-spacing:.04em}
+  .fld>h4{font-size:12.5px;color:var(--slate);letter-spacing:.04em}
 }
 
 /* Restored: the layout rewrite replaced a block of this file and took the link
    styling with it, so every link had been rendering as plain body text. */
-a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;
+a{color:var(--link);text-decoration:underline;text-underline-offset:2px;
   text-decoration-thickness:1.5px;font-weight:600}
 /* a tap target on a phone should not be one line of small text */
 @media (hover:none){a{padding:2px 0;display:inline-block}}
@@ -88,5 +96,4 @@ a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;
 @media (min-width:40rem){
   header{padding:16px 22px 11px}
   h1{font-size:21px}
-  :root{--sticky:70px}
 }
