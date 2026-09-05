@@ -194,7 +194,7 @@ function render() {
       put(1, r + 1, 1, 'rl', '', 'Class work');
       put(1, r + 2, 1, 'rl', '', 'Homework');
       if (absRow > 0) put(1, r + absRow, 1, 'rl', '', 'Absent');
-      if (aspRow > 0) put(1, r + aspRow, 1, 'rl asp-lbl', '', 'ASP');
+      if (aspRow > 0) put(1, r + aspRow, 1, 'rl', '', 'ASP');
       w.days.forEach((d, di) => {
         const col = di + 2;
         const idx = d.cycle ? d.blocks.map((b, i) => [b, i]).filter(([b]) => b.period === per) : [];
@@ -215,9 +215,9 @@ function render() {
         if (absRow > 0) put(col, r + absRow, 1, 'cell sub abs', bodyBG(c),
                            absText(d.iso, main.period));
         if (aspRow > 0) {
-          if (other) put(col, r + aspRow, 1, 'cell sub asp-row', bodyBG(c),
+          if (other) put(col, r + aspRow, 1, 'cell sub', bodyBG(c),
                          lines(other[0].cw), ref(wi, di, other[1], 'cw'));
-          else put(col, r + aspRow, 1, 'cell off asp-row', '', '');
+          else put(col, r + aspRow, 1, 'cell off', '', '');
         }
       });
       r += rowsN;

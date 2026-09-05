@@ -112,8 +112,6 @@ button[hidden]{display:none}
 .chd .tg{font-weight:600;white-space:nowrap}
 .chd .nm{font-weight:400;font-size:.88em;opacity:.8}
 .chd .heldn{float:right;margin-left:.4em}
-.mlab{padding:.3em .6em;font-size:.9em;font-weight:600;color:var(--slate);
-  display:flex;align-items:baseline;gap:.4em}
 /* Every cell carries a blank line's worth of space at the foot, so one cell's
    last line never sits hard against the next cell's first. It is padding, not a
    line in the record — nothing is added to what gets saved or published.
@@ -132,7 +130,6 @@ button[hidden]{display:none}
    element into its own flex item — a line with two links became two columns. */
 .ln.b{display:list-item;list-style:disc outside;margin-left:1em}
 .ln.b::marker{color:var(--mute);font-size:.85em}
-.gap{height:.45em}
 .pv{color:var(--mute);font-style:italic;padding-left:.5em;
   border-left:2px solid var(--hair)}
 /* A closed cell shows a (( )) note in single brackets, to set it off from the
@@ -152,8 +149,6 @@ button[hidden]{display:none}
 .pend{font-weight:600;text-decoration:underline dotted;
   text-decoration-color:var(--slate);text-decoration-thickness:1px;
   text-underline-offset:3px}
-.asp{margin-top:.5em;padding-top:.4em;border-top:1px dotted var(--hair)}
-.asp>h5{margin:0 0 .1em;font-size:.8em;font-weight:600;color:var(--mute)}
 
 /* Released is the prominent one — it is the live link. Held back is quieter:
    lighter, unbolded, dotted. Weight, colour and underline all differ. */
@@ -168,7 +163,6 @@ a.h{color:var(--ink);font-weight:400;text-decoration:underline dotted;
 .heldn{font-weight:500;font-size:.8em;color:var(--held);border:1px dashed currentColor;
   border-radius:3px;padding:0 .3em;white-space:nowrap;opacity:.8}
 a:focus-visible{outline:2px solid var(--link);outline-offset:1px}
-.quiet{color:var(--mute);font-size:.9em;padding:.4em .6em;font-style:italic}
 .offtag{padding:.5em .6em;font-size:.95em;color:var(--slate)}
 
 #bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--ink);
