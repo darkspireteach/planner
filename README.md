@@ -55,6 +55,20 @@ private notes kept out of the student view, held links carrying no URL, student
 names never written to the machine, no red/green pair, and nothing loaded from
 the network. Keep it green.
 
+## The student page
+
+`agenda/` is what students open: `…/planner/agenda/?class=p1`, one URL per
+class, in Schoology as a link or an iframe.
+
+Set the endpoint once in `agenda/endpoint.js`. There is no token — the page
+shows only what has been published, and the endpoint has already removed
+everything students may not see. The page cannot turn text into a link: a span
+becomes an anchor only if it arrived carrying a url.
+
+Publishing is `Planner sync ▸ Publish to students now`, or every 15 minutes with
+the trigger on. Students see through the Friday of the current week, and the
+week turns over at 5am on Monday.
+
 ## Not done yet
 
 - The student page: published JSON, one page per class.
