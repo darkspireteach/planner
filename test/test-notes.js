@@ -61,6 +61,32 @@ loadSync(); cfg.url='https://fake/exec'; cfg.token='good';
   student = true; render();
   console.log('hidden from students  :', !document.querySelector('.dhnote'));
   student = false; render();
+
+  // --- the school's reason is its own field ---
+  wi = 0; render();
+  const offEl = document.querySelector('.dhoff[data-f=off]');
+  console.log('');
+  console.log('off-day field exists  :', !!offEl);
+  console.log('seeded from the sheet :', /Staff Day/.test(offEl.textContent));
+  openCell(offEl);
+  offEl.dispatchEvent(new window.InputEvent('beforeinput',
+    {bubbles:true, cancelable:true, inputType:'insertText', data:'x'}));
+  offEl.innerHTML = '<div class="ln">Snow day</div>';
+  closeCell();
+  const day = WEEKS[0].days.find(d => d.offLines && d.offLines[0].spans[0].t === 'Snow day');
+  console.log('edits save to the day :', !!day);
+  console.log('day cells follow it   :', /Snow day/.test(document.getElementById('app').innerHTML));
+  await new Promise(r => setTimeout(r, 20));
+  const offKeys = pushed.filter(k => k.slice(-4) === '|off');
+  const noteKeys = pushed.filter(k => k.slice(-5) === '|note');
+  console.log('pushed under |day|off :', offKeys.length ? offKeys[0] : 'NONE');
+  console.log('note pushed separately:', noteKeys.length ? noteKeys[0] : '(none)');
+  console.log('two distinct records  :', offKeys.length > 0 && noteKeys.length > 0 &&
+              offKeys[0] !== noteKeys[0]);
+  stepBack();
+  console.log('undo restores it      :', !/Snow day/.test(document.querySelector('.dhoff').textContent));
 })();
 `;
 eval(load('data.js') + load('test/fixture.js') + load('render.js') + load('editor.js') + load('sync.js') + probe);
+
+/* The school's reason and my own note are two different fields on the same day. */
