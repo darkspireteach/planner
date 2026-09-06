@@ -10,7 +10,34 @@ const FILLS = [
 ];
 const FILL_ICON = i => '<svg viewBox="0 0 16 16">' +
   '<circle cx="8" cy="8" r="5.5"/>' + FILLS[i] + '</svg>';
-let wi = 0, si = 2, ci = 1, byClass = false, hidePrep = false, student = false, tight = false;
+
+/* Icons for the things you switch between; words stay on the things that have
+   something to report. A mode you flip twice a day is learned in a day; a
+   status you only read when it is wrong has to say what is wrong. */
+const SVG = p => '<svg viewBox="0 0 16 16">' + p + '</svg>';
+const ICONS = {
+  // days down columns, or classes along rows
+  columns: SVG('<path d="M3 2.5v11M8 2.5v11M13 2.5v11"/>'),
+  rows:    SVG('<path d="M2.5 3h11M2.5 8h11M2.5 13h11"/>'),
+  eye:     SVG('<path d="M1.5 8s2.4-4.2 6.5-4.2S14.5 8 14.5 8s-2.4 4.2-6.5 4.2S1.5 8 1.5 8z"/>' +
+               '<circle cx="8" cy="8" r="1.9"/>'),
+  pencil:  SVG('<path d="M11.6 2.4l2 2-7.4 7.4-3 1 1-3z"/><path d="M2 14.6h12"/>'),
+  target:  SVG('<circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="1.4" fill="currentColor" stroke="none"/>'),
+  cloud:   SVG('<path d="M4.6 12.5h7a3 3 0 0 0 .3-6 4 4 0 0 0-7.7-.8 2.6 2.6 0 0 0 .4 6.8z"/>' +
+               '<path d="M6.2 9.2l1.5 1.5 2.6-3"/>'),
+  send:    SVG('<path d="M4.6 12.5h7a3 3 0 0 0 .3-6 4 4 0 0 0-7.7-.8 2.6 2.6 0 0 0 .4 6.8z"/>' +
+               '<path d="M8 10.6V6.2M6.3 7.7L8 6l1.7 1.7"/>')
+};
+/* Five weekdays at a time, but a sliding window rather than a fixed week —
+   so a Thursday can be seen with Tuesday and next Monday either side of it.
+   Records are keyed by date and period, so which five days are on screen is
+   only ever a question of display. */
+const DAYS = [];
+WEEKS.forEach((w, wIdx) => w.days.forEach((d, dIdx) => DAYS.push({d, w: wIdx, i: dIdx})));
+const SPAN = 5;
+const clampStart = v => Math.max(0, Math.min(v, Math.max(0, DAYS.length - SPAN)));
+
+let winStart = 0, si = 2, ci = 1, byClass = false, hidePrep = false, student = false, tight = false;
 
 /* three rules, drawn close or far apart — the button shows the spacing you get */
 const LINES = t => '<svg viewBox="0 0 16 16">' +
@@ -62,12 +89,37 @@ const isOff = d => !d.cycle;
    move somewhere, so they stay readable and every block says why. */
 const isCancelled = d => !!d.cycle && !!offText(d);
 
-/* Monday of the week we're actually in, as YYYY-MM-DD */
-function mondayISO() {
+function todayISO() {
   const d = new Date(); d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   const p = n => String(n).padStart(2, '0');
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+/** the first school day that is today or later — on a Saturday, Monday */
+function todayIndex() {
+  const iso = todayISO();
+  const i = DAYS.findIndex(x => x.d.iso >= iso);
+  return i < 0 ? DAYS.length - 1 : i;
+}
+
+/* today in the middle of the five. On a weekend that puts Monday there,
+   because the search lands on the next school day. */
+const centreOnToday = () => { winStart = clampStart(todayIndex() - 2); };
+
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function shortDate(iso) {
+  const p = iso.split('-');
+  return MONTHS[+p[1] - 1] + ' ' + (+p[2]);
+}
+
+/** the range on screen, e.g. SEP 2 – SEP 8, 2026 */
+function windowLabel(view) {
+  if (!view.length) return '';
+  const a = view[0].d.iso, b = view[view.length - 1].d.iso;
+  const yr = b.split('-')[0];
+  const ya = a.split('-')[0];
+  return shortDate(a) + (ya === yr ? '' : ', ' + ya) +
+         ' \u2013 ' + shortDate(b) + ', ' + yr;
 }
 
 /* Hold the label box open at the width of the longest label in the file. */
@@ -77,11 +129,11 @@ function sizeWeekLabel() {
   const box = at('wksizer');
   if (!box) return;
   let longest = '';
-  for (const w of WEEKS) {
-    const t = 'This week \u00b7 ' + w.label;
+  for (let i = 0; i + SPAN <= DAYS.length; i++) {
+    const t = windowLabel(DAYS.slice(i, i + SPAN));
     if (t.length > longest.length) longest = t;
   }
-  box.innerHTML = '<b>This week</b> \u00b7 ' + esc(longest.replace(/^This week \u00b7 /, ''));
+  box.textContent = longest;
   sized = true;
 }
 
@@ -92,9 +144,9 @@ function tintOf(hex, k) {
 }
 const bodyBG = c => ci === 0 ? '' : `background:${tintOf(c.fill, ci === 1 ? .55 : 1)};`;
 
-function roster(w) {
+function roster(view) {
   const seen = new Map();
-  for (const d of w.days) for (const b of d.blocks)
+  for (const x of view) for (const b of x.d.blocks)
     if (b.course && shown(b.period)) seen.set(b.period, b.course);
   return [...seen.keys()].sort((a, z) => a - z).map(p => [p, seen.get(p)]);
 }
@@ -150,6 +202,9 @@ const heldTag = b => { const n = held(b); return (n && !student) ? `<span class=
 
 /* ---------- grid ---------- */
 
+/* the block layout is the same every day, so one day serves as the template */
+const BLOCK_PROTO = (DAYS.find(x => x.d.cycle) || DAYS[0]).d.blocks;
+
 const P = [];
 const put = (col, row, span, cls, style, html, attrs) =>
   P.push(`<div class="${cls}" style="grid-column:${col};grid-row:${row}/span ${span};${style || ''}"` +
@@ -161,21 +216,37 @@ const ref = (w, d, bi, f) => ` data-w="${w}" data-d="${d}" data-bi="${bi}" data-
                              ` data-h="${key(w, d, bi)}"`;
 
 function render() {
-  const w = WEEKS[wi];
+  winStart = clampStart(winStart);        // never draw from outside the calendar
+  const view = DAYS.slice(winStart, winStart + SPAN);
   document.documentElement.style.setProperty('--fs', SIZES[si] + 'px');
   document.documentElement.style.setProperty('--lh', tight ? '1.25' : '1.4');
   (at('tight') || {}).innerHTML = LINES(!tight);
   sizeWeekLabel();
-  (at('wklabel') || {}).innerHTML =
-    (w.mon === mondayISO() ? '<b>This week</b> \u00b7 ' : '') + w.label;
+  /* The label is just the range now. Whether you are at today is the Today
+     button's job — a tag that says "Today" over a five-day window that may or
+     may not contain it was telling you less than it looked like. */
+  const home = winStart === clampStart(todayIndex() - 2);
+  if (at('wklabel')) at('wklabel').textContent = windowLabel(view);
+  if (at('today')) {
+    at('today').innerHTML = ICONS.target;
+    at('today').disabled = home;
+    at('today').title = home ? 'Already at today' : 'Back to today';
+  }
   if (at('colour')) {
     at('colour').innerHTML = FILL_ICON(ci);
     at('colour').title = 'Colour: ' + COLOUR[ci];
   }
-  (at('prev') || {}).disabled = wi === 0;
-  (at('next') || {}).disabled = wi === WEEKS.length - 1;
-  (at('tview') || {}).textContent = byClass ? 'By schedule' : 'By class';
-  (at('tstu') || {}).textContent = student ? 'Teacher view' : 'Student view';
+  const last = Math.max(0, DAYS.length - SPAN);
+  ['prev', 'prevWk'].forEach(id => { if (at(id)) at(id).disabled = winStart === 0; });
+  ['next', 'nextWk'].forEach(id => { if (at(id)) at(id).disabled = winStart === last; });
+  if (at('tview')) {
+    at('tview').innerHTML = byClass ? ICONS.columns : ICONS.rows;
+    at('tview').title = byClass ? 'By schedule' : 'By class';
+  }
+  if (at('tstu')) {
+    at('tstu').innerHTML = student ? ICONS.pencil : ICONS.eye;
+    at('tstu').title = student ? 'Teacher view' : 'Student view';
+  }
   document.body.classList.toggle('ed-off', student);
 
   const allOn = ALL.every(([p]) => shown(p)) && (byClass || !hidePrep);
@@ -196,8 +267,10 @@ function render() {
 
   P.length = 0;
   put(1, 1, 1, 'corner');
-  w.days.forEach((d, i) => put(i + 2, 1, 1, 'dh', '',
-    `<div class="dhtop"><b>${d.d}</b>` +
+  const iso = todayISO();
+  view.forEach(({d, w: wi, i}, col) => put(col + 2, 1, 1,
+    'dh' + (d.iso === iso ? ' today' : ''), '',
+    `<div class="dhtop"><b>${d.d}${d.iso === iso ? '<i>today</i>' : ''}</b>` +
     `<span>${!d.cycle ? 'No school'
        : (student && isCancelled(d)) ? '' : 'Day ' + d.cycle}</span></div>` +
     (student
@@ -209,10 +282,10 @@ function render() {
 
   let r = 2;
   if (byClass) {
-    for (const [per, c] of roster(w)) {
+    for (const [per, c] of roster(view)) {
       // a course that picks up ASP any day this week gets its own row for it,
       // so every day keeps the same rows and the columns stay aligned
-      const hasAsp = w.days.some(d => d.cycle &&
+      const hasAsp = view.some(({d}) => d.cycle &&
         d.blocks.some(b => b.period === per && b.block === 'ASP') &&
         d.blocks.some(b => b.period === per && b.block !== 'ASP'));
       // ASP sits below the absence line, which separates it from the block
@@ -224,8 +297,8 @@ function render() {
       put(1, r + 2, 1, 'rl', '', 'Homework');
       if (absRow > 0) put(1, r + absRow, 1, 'rl', '', 'Absent');
       if (aspRow > 0) put(1, r + aspRow, 1, 'rl', '', 'ASP');
-      w.days.forEach((d, di) => {
-        const col = di + 2;
+      view.forEach(({d, w: wi, i: di}, ci2) => {
+        const col = ci2 + 2;
         const idx = d.cycle ? d.blocks.map((b, i) => [b, i]).filter(([b]) => b.period === per) : [];
         if (!idx.length) {
           put(col, r, rowsN, 'cell off bt', '', d.cycle ? '' : `<div class="offtag">${esc(offText(d) || 'No school')}</div>`);
@@ -259,8 +332,8 @@ function render() {
        labelling only the first and leaving the rest blank. */
     const plan = [];
     let planRow = r;
-    WEEKS[0].days[2].blocks.forEach((proto, bi) => {
-      if (hidePrep && !w.days.some(d => d.blocks[bi] && d.blocks[bi].course && shown(d.blocks[bi].period))) return;
+    BLOCK_PROTO.forEach((proto, bi) => {
+      if (hidePrep && !view.some(({d}) => d.blocks[bi] && d.blocks[bi].course && shown(d.blocks[bi].period))) return;
       const isAsp = proto.block === 'ASP';
       const last = isAsp ? 2 : 3;
       const span = last + (student ? 0 : 1);
@@ -270,9 +343,9 @@ function render() {
     const bodyTop = r, bodyRows = planRow - r;
 
     // a day with no school at all: one band, once, across the whole column
-    w.days.forEach((d, di) => {
+    view.forEach(({d}, col) => {
       if (!isOff(d) || !bodyRows) return;
-      put(di + 2, bodyTop, bodyRows, 'cell off bt offday', '',
+      put(col + 2, bodyTop, bodyRows, 'cell off bt offday', '',
           `<div class="offtag">${esc(offText(d) || 'No school')}</div>`);
     });
 
@@ -281,8 +354,8 @@ function render() {
       put(1, r + 1, 1, 'rl', '', isAsp ? 'Notes' : 'Class work');
       if (!isAsp) put(1, r + 2, 1, 'rl', '', 'Homework');
       if (!student) put(1, r + last, 1, 'rl', '', 'Absent');
-      w.days.forEach((d, di) => {
-        const col = di + 2;
+      view.forEach(({d, w: wi, i: di}, ci2) => {
+        const col = ci2 + 2;
         if (isOff(d)) return;                        // already merged above
         const b = d.blocks[bi], c = b.course;
         if (c && !shown(b.period)) {                 // a class switched off
@@ -342,8 +415,12 @@ function loadPrefs() {
 
 function wireToolbar() {
   const on = (id, fn) => document.getElementById(id).onclick = e => { fn(e.currentTarget); render(); };
-  on('prev', () => wi = Math.max(0, wi - 1));
-  on('next', () => wi = Math.min(WEEKS.length - 1, wi + 1));
+  on('prevWk', () => winStart = clampStart(winStart - SPAN));
+  on('prev', () => winStart = clampStart(winStart - 1));
+  on('next', () => winStart = clampStart(winStart + 1));
+  on('nextWk', () => winStart = clampStart(winStart + SPAN));
+  on('today', () => centreOnToday());
+  on('wklabel', () => centreOnToday());          // the dates work as well
   on('smaller', () => si = Math.max(0, si - 1));
   on('bigger', () => si = Math.min(SIZES.length - 1, si + 1));
   on('colour', () => ci = (ci + 1) % COLOUR.length);
@@ -381,8 +458,7 @@ function wireToolbar() {
 
 function start() {
   loadPrefs();
-  const i = WEEKS.findIndex(w => w.mon === mondayISO());
-  if (i >= 0) wi = i;
+  centreOnToday();
   wireToolbar();
   wireEditor();
   render();

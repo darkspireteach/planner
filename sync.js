@@ -302,17 +302,32 @@ async function publishNow(btn) {
   }
 }
 
+let pubTimer = null;
 function setPub(t) {
   const el = document.getElementById('publish');
-  if (el) el.textContent = t;
+  if (!el) return;
+  el.title = t || 'Publish to the student pages';
+  clearTimeout(pubTimer);
+  if (!t && typeof ICONS !== 'undefined') { el.innerHTML = ICONS.send; el.classList.add('ico'); return; }
+  el.textContent = t;
+  el.classList.remove('ico');
+  // say what happened, then go back to being an icon
+  if (/^Published/.test(t)) pubTimer = setTimeout(() => setPub(''), 6000);
 }
 
 /* ---------- status ---------- */
 
+/* An icon when there is nothing to say, words when there is. "Up to date" is
+   worth one glyph; "Offline — 3 pending" has to be readable. */
+const QUIET = {'Up to date': 1, 'Saved': 1};
+
 function setNote(t) {
   syncNote = t;
   const el = document.getElementById('sync');
-  if (el) el.textContent = t;
+  if (!el) return;
+  el.title = t;
+  if (QUIET[t] && typeof ICONS !== 'undefined') { el.innerHTML = ICONS.cloud; el.classList.add('ico'); }
+  else { el.textContent = t; el.classList.remove('ico'); }
 }
 
 function connect() {
@@ -372,7 +387,7 @@ function wireSync() {
   const btn = document.getElementById('sync');
   if (btn) btn.onclick = e => { if (e.shiftKey || !cfg.url) connect(); else startSync(); };
   const pub = document.getElementById('publish');
-  if (pub) pub.onclick = () => publishNow();
+  if (pub) { pub.onclick = () => publishNow(); setPub(''); }
   window.addEventListener('online', () => startSync());
   setNote(cfg.url ? 'Connecting\u2026' : 'Not connected');
   startSync();

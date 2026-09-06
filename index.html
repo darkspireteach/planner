@@ -4,16 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lesson Plan 26.27</title>
-<link rel="icon" href="favicon.svg?v=24" type="image/svg+xml">
-<link rel="stylesheet" href="styles.css?v=24">
+<link rel="icon" href="favicon.svg?v=27" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css?v=27">
 </head>
 <body>
 <header>
   <h1>Lesson Plan 26.27</h1>
   <div class="weeknav">
-    <button id="prev" title="Previous week">&larr;</button>
-    <div class="wk"><span class="sizer" id="wksizer"></span><span id="wklabel"></span></div>
-    <button id="next" title="Next week">&rarr;</button>
+    <button id="prevWk" title="Back a week">&laquo;</button>
+    <button id="prev" title="Back a day">&lsaquo;</button>
+    <div class="wk" id="wklabel-wrap"><span class="sizer" id="wksizer"></span><span id="wklabel" title="Back to today"></span></div>
+    <button id="next" title="Forward a day">&rsaquo;</button>
+    <button id="nextWk" title="Forward a week">&raquo;</button>
+    <button id="today" title="Back to today"></button>
   </div>
   <nav>
     <button id="smaller" title="Smaller text">A&darr;</button>
@@ -21,11 +24,11 @@
     <button id="tight" aria-pressed="false" title="Line spacing"></button>
     <button id="colour" title="Colour"></button>
     <span class="sep"></span>
-    <button id="tview">By class</button>
-    <button id="tstu">Student view</button>
+    <button id="tview" title="By class"></button>
+    <button id="tstu" title="Student view"></button>
     <span class="sep"></span>
     <button id="sync" title="Click to sync now, shift-click to set the URL and token">Not connected</button>
-    <button id="publish" title="Send this week to the student pages">Publish</button>
+    <button id="publish" title="Publish to the student pages"></button>
   </nav>
   <div class="classbar" id="classbar"></div>
 </header>
@@ -36,10 +39,10 @@
 
 <div id="bar"><b></b><span></span></div>
 
-<script src="data.js?v=24"></script>
-<script src="render.js?v=24"></script>
-<script src="editor.js?v=24"></script>
-<script src="sync.js?v=24"></script>
+<script src="data.js?v=27"></script>
+<script src="render.js?v=27"></script>
+<script src="editor.js?v=27"></script>
+<script src="sync.js?v=27"></script>
 <script>start();</script>
 </body>
 </html>
