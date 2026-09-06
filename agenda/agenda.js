@@ -64,7 +64,7 @@ function render(data) {
   const app = document.getElementById('app');
   const c = data.course;
   // period, not section — students know their class by the period they have it
-  const heading = c ? (c.tag ? c.tag + ' ' : '') + c.name : 'Class agenda';
+  const heading = c ? (c.tag ? c.tag + ' \u00b7 ' : '') + c.name : 'Class agenda';
   document.title = c ? heading + ' \u2014 agenda' : 'Class agenda';
   if (c && c.fill) document.documentElement.style.setProperty('--accent', c.ink || '#1B3A5C');
 
