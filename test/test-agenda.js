@@ -15,8 +15,12 @@ eval(src.replace(/^if \(typeof document.*$/m, '').replace(/^if \(typeof module.*
 render(feed);
 const out = document.getElementById('app').innerHTML;
 
-console.log('title      :', document.getElementById('title').textContent);
-console.log('stamp      :', document.getElementById('stamp').textContent);
+const bar = document.querySelector('.week>h2');
+console.log('class in the bar :', bar.querySelector('.cls').textContent);
+console.log('dates next to it :', bar.querySelector('.dates').textContent);
+console.log('updated below    :', bar.querySelector('.upd').textContent);
+console.log('no page header   :', !document.querySelector('header'));
+console.log('tab title        :', document.title);
 console.log('weeks      :', document.querySelectorAll('.week').length);
 console.log('rows shown :', document.querySelectorAll('.row').length,
             '(off days:', document.querySelectorAll('.row.off').length + ')');

@@ -46,5 +46,22 @@ console.log('column is NOT merged    :', !document.querySelector('.offday[style*
 student = true; render();
 console.log('');
 console.log('students see the reason :', /Snow day/.test(grid()));
+console.log('and not the cycle day   :', !/Day 3/.test(
+  document.querySelector('.dh:nth-of-type(' + (WEEKS[0].days.indexOf(day) + 2) + ')') ?
+  document.querySelectorAll('.dh')[WEEKS[0].days.indexOf(day)].textContent : ''));
+student = false; render();
+
+// the whole column updates when the field is closed, not just the field
+day.offLines = null; render();
+console.log('');
+console.log('cleared: no marks       :', document.querySelectorAll('.cxl').length === 0);
+const fld = document.querySelector('[data-f=off][data-h="0.' + WEEKS[0].days.indexOf(day) + '.o"]');
+day.offLines = [{bullet:false, private:false, spans:[{t:'Snow Day', url:null, rel:false, priv:false}]}];
+markCancelled(0, WEEKS[0].days.indexOf(day), fld);
+console.log('marking updates column  :', document.querySelectorAll('.cxl').length, 'blocks');
+console.log('  without a full redraw :', document.querySelectorAll('.cxl')[0].textContent === 'Snow Day');
+day.offLines = null;
+markCancelled(0, WEEKS[0].days.indexOf(day), fld);
+console.log('clearing removes them   :', document.querySelectorAll('.cxl').length === 0);
 `;
 eval(load('data.js') + load('test/fixture.js') + load('render.js') + load('editor.js') + load('sync.js') + probe);

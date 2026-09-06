@@ -50,7 +50,7 @@ console.log('  but carries no url    :', heldSpan && !('url' in heldSpan));
 console.log('released is not flagged  :', !flat.find(s => s.url && s.held));
 console.log('empty cell -> null      :', redactLines([line([span('x')], {private: true})]) === null);
 
-console.log('\n--- off-day labels ---');
+console.log('\n--- off-day labels: only the SEEDED ones are trimmed ---');
 eval(grab('studentReason'));
 const reasons = [
   ['Staff Day \u2014 Convocation, PD 8\u20133', 'No school'],
