@@ -75,6 +75,20 @@ screens are wide, and a single column wasted most of one. It stacks below
 already maintains; the endpoint reads it and hands each class its own links
 plus anything marked ALL.
 
+## The colleague view
+
+`Planner sync ▸ Colleague link` gives a second, read-only secret. Added to an
+agenda address — `…/agenda/?class=p1&k=…` — it opens the whole year instead of
+the published weeks, with unreleased links working, private lines and `(( ))`
+runs visible, and my day notes shown. Never absences: those are student names,
+and a teacher at another school has no business with them.
+
+It is link security, not identity. Apps Script cannot know who is visiting
+while also reading my spreadsheet, so this is exactly as private as an unlisted
+document — the risk is a student being *given* the link. It is a separate token
+from the write one, so `New colleague link` revokes it without disturbing the
+machines I write from.
+
 ## Not done yet
 
 - The student page: published JSON, one page per class.
