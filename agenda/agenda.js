@@ -65,16 +65,14 @@ function render(data) {
   const c = data.course;
   // period, not section — students know their class by the period they have it
   const heading = c ? (c.tag ? c.tag + ' ' : '') + c.name : 'Class agenda';
-  document.getElementById('title').textContent = heading;
   document.title = c ? heading + ' \u2014 agenda' : 'Class agenda';
   if (c && c.fill) document.documentElement.style.setProperty('--accent', c.ink || '#1B3A5C');
 
-  if (data.updated) {
-    document.getElementById('stamp').textContent =
-      'Updated ' + new Date(data.updated).toLocaleString(undefined,
+  const stamp = data.updated
+    ? 'Updated ' + new Date(data.updated).toLocaleString(undefined,
         {weekday: 'short', month: 'short', day: 'numeric',
-         hour: 'numeric', minute: '2-digit'});
-  }
+         hour: 'numeric', minute: '2-digit'})
+    : '';
 
   const weeks = (data.weeks || [])
     .map(w => {
@@ -84,7 +82,13 @@ function render(data) {
         if (html) stripe = 1 - stripe;            // shade by day, not by row
         return html;
       }).join('');
-      return days ? `<section class="week"><h2>${esc(w.label)}</h2>${days}</section>` : '';
+      // the class name, the dates and when it was last updated all live in the
+      // bar — there is no separate page header to take up a Chromebook's screen
+      return days ? '<section class="week"><h2>' +
+        `<span class="cls">${esc(heading)}</span>` +
+        `<span class="dates">${esc(w.label)}</span>` +
+        (stamp ? `<span class="upd">${esc(stamp)}</span>` : '') +
+        `</h2>${days}</section>` : '';
     })
     .filter(Boolean);
 
@@ -104,14 +108,31 @@ async function load(quiet) {
     // the cache-buster matters: Google caches these replies, and a stale one
     // would show yesterday's plan with no sign that it was old
     const url = ENDPOINT + '?class=' + tag + '&t=' + Date.now();
-    const res = await fetch(url);
-    const data = await res.json();
+    let res;
+    try {
+      res = await fetch(url);
+    } catch (err) {
+      // the network, or the address in endpoint.js — not the page's own doing
+      if (!quiet) fail('Could not reach the agenda. ' + err.message);
+      return;
+    }
+    if (!res.ok) { if (!quiet) fail('The agenda replied ' + res.status + '.'); return; }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (err) {
+      if (!quiet) fail('The agenda sent something unreadable. It may need publishing again.');
+      return;
+    }
     if (!data.ok) { if (!quiet) fail(data.error || 'Could not load the agenda.'); return; }
     if (quiet && data.updated === lastUpdated) return;    // nothing new
     lastUpdated = data.updated;
     render(data);
   } catch (err) {
-    if (!quiet) fail('Could not reach the agenda. Try again in a moment.');
+    // a fault in the page itself must not read as "the network is down"
+    console.error(err);
+    if (!quiet) fail('The agenda could not be drawn: ' + err.message);
   }
 }
 
