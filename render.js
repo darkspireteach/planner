@@ -10,6 +10,11 @@ const LINES = t => '<svg viewBox="0 0 16 16">' +
 const off = new Set();                       // periods switched off
 const shown = p => !off.has(p);
 
+/* Never assume an element is there. A half-finished upload used to throw and
+   take the whole grid down with it; a missing button is a far better failure
+   than a blank page. */
+const at = id => document.getElementById(id);
+
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /* every course in the file, so the switches don't move week to week */
@@ -61,7 +66,7 @@ function mondayISO() {
 let sized = false;
 function sizeWeekLabel() {
   if (sized) return;
-  const box = document.getElementById('wksizer');
+  const box = at('wksizer');
   if (!box) return;
   let longest = '';
   for (const w of WEEKS) {
@@ -151,32 +156,32 @@ function render() {
   const w = WEEKS[wi];
   document.documentElement.style.setProperty('--fs', SIZES[si] + 'px');
   document.documentElement.style.setProperty('--lh', tight ? '1.25' : '1.4');
-  document.getElementById('tight').innerHTML = LINES(!tight);
+  (at('tight') || {}).innerHTML = LINES(!tight);
   sizeWeekLabel();
-  document.getElementById('wklabel').innerHTML =
+  (at('wklabel') || {}).innerHTML =
     (w.mon === mondayISO() ? '<b>This week</b> \u00b7 ' : '') + w.label;
-  document.getElementById('colour').textContent = 'Colour: ' + COLOUR[ci];
-  document.getElementById('prev').disabled = wi === 0;
-  document.getElementById('next').disabled = wi === WEEKS.length - 1;
-  document.getElementById('tview').textContent = byClass ? 'By schedule' : 'By class';
-  document.getElementById('tstu').textContent = student ? 'Teacher view' : 'Student view';
+  (at('colour') || {}).textContent = 'Colour: ' + COLOUR[ci];
+  (at('prev') || {}).disabled = wi === 0;
+  (at('next') || {}).disabled = wi === WEEKS.length - 1;
+  (at('tview') || {}).textContent = byClass ? 'By schedule' : 'By class';
+  (at('tstu') || {}).textContent = student ? 'Teacher view' : 'Student view';
   document.body.classList.toggle('ed-off', student);
 
   const allOn = ALL.every(([p]) => shown(p)) && (byClass || !hidePrep);
   // the class switches sit in the same column as the buttons above them, so the
   // two rows line up — which reads better than being centred on the page
-  document.getElementById('classbar').innerHTML =
+  if (at('classbar')) at('classbar').innerHTML =
     ALL.map(([p, c]) =>
       `<button class="cb" data-p="${p}" aria-pressed="${shown(p)}"` +
       (shown(p) ? ` style="background:${c.fill};color:${c.ink}"` : '') +
       `>${c.sym}\u00A0${c.tag}</button>`).join('') +
     (byClass ? '' : `<button class="cb" data-p="prep" aria-pressed="${!hidePrep}"` +
-      (hidePrep ? '' : ` style="background:var(--rail);color:var(--slate)"`) + `>Prep</button>`);
-  document.getElementById('allbar').innerHTML =
-    `<span id="hint">${(typeof absentNote !== 'undefined' && absentNote && !student)
-        ? '\u26a0 ' + esc(absentNote) : ''}</span>` +
+      (hidePrep ? '' : ` style="background:var(--rail);color:var(--slate)"`) + `>Prep</button>`) +
     `<button class="cb" data-p="all" aria-pressed="${allOn}"` +
-    (allOn ? ` style="background:var(--rail);color:var(--ink)"` : '') + `>All</button>`;
+    (allOn ? ` style="background:var(--rail);color:var(--ink)"` : '') + `>All</button>` +
+    `<span id="hint">${(typeof absentNote !== 'undefined' && absentNote && !student)
+        ? '\u26a0 ' + esc(absentNote) : ''}</span>`;
+
 
   P.length = 0;
   put(1, 1, 1, 'corner');
@@ -337,7 +342,7 @@ function wireToolbar() {
     const v = el.getAttribute('aria-pressed') !== 'true';
     el.setAttribute('aria-pressed', v); tight = v;
   });
-  ['classbar', 'allbar'].forEach(id => document.getElementById(id).addEventListener('click', e => {
+  ['classbar'].forEach(id => document.getElementById(id).addEventListener('click', e => {
     const b = e.target.closest('.cb');
     if (!b) return;
     if (b.dataset.p === 'all') {
