@@ -11,6 +11,18 @@ const esc = s => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 let staff = false;                     // a colleague's link, not a student's
+let jumped = false;                    // only ever scroll on the first load
+
+/** the last week that has started, or the first one if the year has not */
+function goToCurrentWeek(today) {
+  const secs = [...document.querySelectorAll('.week[data-mon]')];
+  if (!secs.length) return;
+  const now = today || new Date().toISOString().slice(0, 10);
+  let target = secs[0];
+  for (const s of secs) if (s.dataset.mon <= now) target = s;
+  if (target !== secs[0] && target.scrollIntoView) target.scrollIntoView({block: 'start'});
+  target.classList.add('here');
+}
 
 function spanHTML(s) {
   const t = esc(s.t);
@@ -96,7 +108,9 @@ function render(data) {
       // bar — there is no separate page header to take up a Chromebook's screen
       // dates over the updated time on one side, the class name on the other,
       // centred against both — a flex row so the centring cannot come adrift
-      return days ? '<section class="week"><h2>' +
+      // an anchor per week, so the page can jump to the one in progress
+      const wid = 'w' + (w.mon || '').replace(/-/g, '');
+      return days ? `<section class="week" id="${wid}" data-mon="${esc(w.mon || '')}"><h2>` +
         '<span class="when2">' +
           `<span class="dates">${esc(w.label)}</span>` +
           (stamp ? `<span class="upd">${esc(stamp)}</span>` : '') +
@@ -111,6 +125,10 @@ function render(data) {
              'links and notes included. Not for students.</p>' : '') +
     linkBar(data.links) +
     (weeks.length ? weeks.join('') : '<p class="msg">Nothing posted yet.</p>');
+
+  // the year runs forward for staff, so start them at the week in progress
+  // rather than at the top of August
+  if (staff && !jumped) { jumped = true; goToCurrentWeek(data.today); }
 }
 
 function fail(msg) {
@@ -165,7 +183,7 @@ function watch() {
 
 function start() {
   const q = new URLSearchParams(location.search);
-  tag = (q.get('class') || q.get('cls') || '').toLowerCase();
+  tag = (q.get('class') || '').toLowerCase();
   key = q.get('k') || '';
   if (!/^p[1-7]$/.test(tag)) { fail('Add a class to the address, like ?class=p1'); return; }
   load();
