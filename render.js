@@ -162,20 +162,21 @@ function render() {
   document.getElementById('tstu').textContent = student ? 'Teacher view' : 'Student view';
   document.body.classList.toggle('ed-off', student);
 
-  const cbar = document.getElementById('classbar');
   const allOn = ALL.every(([p]) => shown(p)) && (byClass || !hidePrep);
-  cbar.innerHTML = '<b>Classes</b>' +
-    `<button class="cb" data-p="all" aria-pressed="${allOn}"` +
-    (allOn ? ` style="background:var(--rail);color:var(--ink)"` : '') + `>All</button>` +
+  // the class switches sit in the same column as the buttons above them, so the
+  // two rows line up — which reads better than being centred on the page
+  document.getElementById('classbar').innerHTML =
     ALL.map(([p, c]) =>
       `<button class="cb" data-p="${p}" aria-pressed="${shown(p)}"` +
       (shown(p) ? ` style="background:${c.fill};color:${c.ink}"` : '') +
       `>${c.sym}\u00A0${c.tag}</button>`).join('') +
     (byClass ? '' : `<button class="cb" data-p="prep" aria-pressed="${!hidePrep}"` +
-      (hidePrep ? '' : ` style="background:var(--rail);color:var(--slate)"`) + `>Prep</button>`) +
-    // only a warning ever appears here; the how-to text was permanent clutter
+      (hidePrep ? '' : ` style="background:var(--rail);color:var(--slate)"`) + `>Prep</button>`);
+  document.getElementById('allbar').innerHTML =
     `<span id="hint">${(typeof absentNote !== 'undefined' && absentNote && !student)
-        ? '\u26a0 ' + esc(absentNote) : ''}</span>`;
+        ? '\u26a0 ' + esc(absentNote) : ''}</span>` +
+    `<button class="cb" data-p="all" aria-pressed="${allOn}"` +
+    (allOn ? ` style="background:var(--rail);color:var(--ink)"` : '') + `>All</button>`;
 
   P.length = 0;
   put(1, 1, 1, 'corner');
@@ -217,8 +218,10 @@ function render() {
         const [main, mi] = idx.find(([b]) => b.block !== 'ASP') || idx[0];
         const other = idx.find(([b]) => b.block !== main.block);
         put(col, r, 1, 'chd bt', `background:${c.fill};color:${c.ink}`,
-            `${heldTag(main)}<span class="tg">${c.sym}\u00A0${c.tag}</span> ` +
-            `<span class="nm">${c.name} &middot; ${main.block}</span>`,
+            `<span class="who"><span class="tg">${c.sym}\u00A0${c.tag}</span> ` +
+            `<span class="nm">${c.name} &middot; ${main.block}</span></span>` +
+            (isCancelled(d) ? `<span class="cxl">${esc(offText(d))}</span>` : '') +
+            heldTag(main),
             ` data-h="${key(wi, di, mi)}"`);
         put(col, r + 1, 1, 'cell sub', bodyBG(c), lines(main.cw), ref(wi, di, mi, 'cw'));
         put(col, r + 2, 1, 'cell sub', bodyBG(c), lines(main.hw), ref(wi, di, mi, 'hw'));
@@ -280,8 +283,10 @@ function render() {
           return;
         }
         put(col, r, 1, 'chd bt', `background:${c.fill};color:${c.ink}`,
-            `${heldTag(b)}<span class="tg">${c.sym}\u00A0${c.tag}</span> <span class="nm">${c.name}</span>` +
-            (isCancelled(d) ? `<span class="cxl">${esc(offText(d))}</span>` : ''),
+            `<span class="who"><span class="tg">${c.sym}\u00A0${c.tag}</span> ` +
+            `<span class="nm">${c.name}</span></span>` +
+            (isCancelled(d) ? `<span class="cxl">${esc(offText(d))}</span>` : '') +
+            heldTag(b),
             ` data-h="${key(wi, di, bi)}"`);
         put(col, r + 1, 1, 'cell sub', bodyBG(c), lines(b.cw), ref(wi, di, bi, 'cw'));
         if (!isAsp) put(col, r + 2, 1, 'cell sub', bodyBG(c), lines(b.hw), ref(wi, di, bi, 'hw'));
@@ -332,7 +337,7 @@ function wireToolbar() {
     const v = el.getAttribute('aria-pressed') !== 'true';
     el.setAttribute('aria-pressed', v); tight = v;
   });
-  document.getElementById('classbar').addEventListener('click', e => {
+  ['classbar', 'allbar'].forEach(id => document.getElementById(id).addEventListener('click', e => {
     const b = e.target.closest('.cb');
     if (!b) return;
     if (b.dataset.p === 'all') {
@@ -346,7 +351,7 @@ function wireToolbar() {
     const p = +b.dataset.p;
     off.has(p) ? off.delete(p) : off.add(p);
     render();
-  });
+  }));
 
   const bar = document.getElementById('bar');
   document.addEventListener('mouseover', e => {

@@ -59,10 +59,18 @@ nav #tight[aria-pressed="true"]{background:var(--card);color:var(--slate);
 nav #tight svg{width:13px;height:13px;fill:none;stroke:currentColor;
   stroke-width:1.5;stroke-linecap:round}
 button[hidden]{display:none}
-.classbar{grid-column:1/-1;display:flex;gap:4px;align-items:center;flex-wrap:wrap;
-  justify-content:center;position:relative;
-  padding-top:6px;margin-top:3px;border-top:1px solid var(--hair)}
-.classbar>b{font-size:10.5px;font-weight:600;color:var(--slate)}
+/* Column 2 and column 3 of the header grid, so the class switches sit directly
+   under the buttons above them. Centred on the page would not line up. */
+.classbar{grid-column:2;grid-row:3;justify-self:center;
+  display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.allbar{grid-column:3;grid-row:3;justify-self:end;
+  display:flex;gap:8px;align-items:center}
+.classbar, .allbar{padding-top:6px;margin-top:3px}
+header{border-bottom:1px solid var(--hair)}
+@media (max-width:1150px){
+  .classbar{grid-column:1/-1;grid-row:3}
+  .allbar{grid-column:1/-1;grid-row:4;justify-self:center}
+}
 .cb{font:inherit;font-size:10.5px;border-radius:4px;padding:1px 6px;cursor:pointer;
   border:1px solid transparent}
 .cb[aria-pressed=false]{background:var(--paper);color:var(--mute);
@@ -97,7 +105,7 @@ button[hidden]{display:none}
 .ed-off .dhoff{display:none}
 
 /* a cancelled day still shows its work, so every block says why it is off */
-.cxl{margin-left:auto;font-size:.8em;font-weight:600;color:var(--amber-ink);
+.cxl{font-size:.8em;font-weight:600;color:var(--amber-ink);
   background:var(--amber-bg);border-radius:3px;padding:0 .35em;white-space:nowrap}
 .offday .offtag{position:sticky;top:6em;text-align:center;font-style:italic}
 
@@ -129,10 +137,15 @@ button[hidden]{display:none}
 .cell.prep{background:#FCFCFD}
 .prephd{background:var(--rail);color:var(--slate)}
 .prepbox{background:#FCFCFD}
-.chd{padding:.3em .6em;font-size:.98em;line-height:1.25}
+/* name, then why the day is off, then the held count — the middle slot is the
+   one that only appears sometimes */
+.chd{padding:.3em .6em;font-size:.98em;line-height:1.25;
+  display:flex;align-items:baseline;gap:.4em;flex-wrap:wrap}
+.chd .who{flex:0 1 auto;min-width:0}
 .chd .tg{font-weight:600;white-space:nowrap}
 .chd .nm{font-weight:400;font-size:.88em;opacity:.8}
-.chd .heldn{float:right;margin-left:.4em}
+.chd .cxl{margin:0 auto}
+.chd .heldn{flex:0 0 auto;margin-left:auto}
 /* Every cell carries a blank line's worth of space at the foot, so one cell's
    last line never sits hard against the next cell's first. It is padding, not a
    line in the record — nothing is added to what gets saved or published.
@@ -224,5 +237,4 @@ a:focus-visible{outline:2px solid var(--link);outline-offset:1px}
 #pop .ed input{font:inherit;font-size:12px;padding:4px 6px;margin-bottom:5px;
   border:1px solid var(--hair);border-radius:4px}
 #pop .ed button{font-size:12px;padding:3px 8px}
-#hint{font-size:11px;color:var(--amber-ink);position:absolute;right:0;white-space:nowrap}
-#hint:not(:empty){white-space:nowrap}
+#hint{font-size:11px;color:var(--amber-ink);white-space:nowrap}
