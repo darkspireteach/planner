@@ -10,23 +10,23 @@ document.execCommand = () => true;
 const load = f => fs.readFileSync(f,'utf8');
 const probe = `
 loadPrefs(); wireToolbar(); wireEditor(); byClass = true;
-for (wi of [0, 1]) {
+for (winStart of [0, 5]) {
   render();
-  const w = WEEKS[wi];
-  let live = 0, dead = 0, wrong = 0;
-  for (const [per] of roster(w)) {
-    w.days.forEach((d, di) => {
+  const view = DAYS.slice(winStart, winStart + SPAN);
+  let live = 0, wrong = 0;
+  for (const [per] of roster(view)) {
+    view.forEach(({d, w, i: di}) => {
       if (!d.cycle) return;
       const meets = d.blocks.some(b => b.period === per && b.block !== 'ASP');
       if (!meets) return;
       const asp = d.blocks.findIndex(b => b.period === per && b.block === 'ASP');
-      const cell = document.querySelector('[data-h="' + wi + '.' + di + '.' + asp + '"][data-f="cw"]');
+      const cell = document.querySelector('[data-h="' + w + '.' + di + '.' + asp + '"][data-f="cw"]');
       if (asp >= 0) { if (cell) live++; else wrong++; }
     });
   }
   const greyed = document.querySelectorAll('.cell.off').length;
-  console.log(w.label.slice(0,10), '| editable ASP cells', live, '| missing', wrong,
-              '| greyed cells on the grid', greyed);
+  console.log(windowLabel(view).slice(0,12), '| editable ASP cells', live,
+              '| missing', wrong, '| greyed cells on the grid', greyed);
 }
 // nothing that looks writable is actually dead
 render();
