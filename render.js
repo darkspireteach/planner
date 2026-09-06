@@ -163,24 +163,28 @@ function render() {
   document.body.classList.toggle('ed-off', student);
 
   const cbar = document.getElementById('classbar');
-  cbar.innerHTML = '<b>Classes</b>' + ALL.map(([p, c]) =>
-    `<button class="cb" data-p="${p}" aria-pressed="${shown(p)}"` +
-    (shown(p) ? ` style="background:${c.fill};color:${c.ink}"` : '') +
-    `>${c.sym}\u00A0${c.tag}</button>`).join('') +
+  const allOn = ALL.every(([p]) => shown(p)) && (byClass || !hidePrep);
+  cbar.innerHTML = '<b>Classes</b>' +
+    `<button class="cb" data-p="all" aria-pressed="${allOn}"` +
+    (allOn ? ` style="background:var(--rail);color:var(--ink)"` : '') + `>All</button>` +
+    ALL.map(([p, c]) =>
+      `<button class="cb" data-p="${p}" aria-pressed="${shown(p)}"` +
+      (shown(p) ? ` style="background:${c.fill};color:${c.ink}"` : '') +
+      `>${c.sym}\u00A0${c.tag}</button>`).join('') +
     (byClass ? '' : `<button class="cb" data-p="prep" aria-pressed="${!hidePrep}"` +
       (hidePrep ? '' : ` style="background:var(--rail);color:var(--slate)"`) + `>Prep</button>`) +
-    `<span id="hint">${student ? 'Read-only preview'
-      : (typeof absentNote !== 'undefined' && absentNote)
-        ? '\u26a0 ' + esc(absentNote)
-        : 'Click a cell to write \u00b7 paste a URL onto selected words'}</span>`;
+    // only a warning ever appears here; the how-to text was permanent clutter
+    `<span id="hint">${(typeof absentNote !== 'undefined' && absentNote && !student)
+        ? '\u26a0 ' + esc(absentNote) : ''}</span>`;
 
   P.length = 0;
   put(1, 1, 1, 'corner');
   w.days.forEach((d, i) => put(i + 2, 1, 1, 'dh', '',
-    `<b>${d.d}</b>` +
-    `<span>${d.cycle ? 'Day ' + d.cycle : 'No school'}</span>` +
+    `<div class="dhtop"><b>${d.d}</b>` +
+    `<span>${!d.cycle ? 'No school'
+       : (student && isCancelled(d)) ? '' : 'Day ' + d.cycle}</span></div>` +
     (student
-      ? (offText(d) ? `<em>${esc(offText(d))}</em>` : '')
+      ? (isCancelled(d) ? `<em>${esc(offText(d))}</em>` : '')
       : `<div class="dhoff${isCancelled(d) ? ' cancelled' : ''}" data-w="${wi}" ` +
         `data-d="${i}" data-f="off" data-h="${wi}.${i}.o">${lines(d.offLines)}</div>`) +
     (student ? '' : `<div class="dhnote" data-w="${wi}" data-d="${i}" ` +
@@ -331,6 +335,13 @@ function wireToolbar() {
   document.getElementById('classbar').addEventListener('click', e => {
     const b = e.target.closest('.cb');
     if (!b) return;
+    if (b.dataset.p === 'all') {
+      // everything showing: put them all away. otherwise: bring them all back.
+      const on = ALL.every(([p]) => shown(p)) && !hidePrep;
+      if (on) { ALL.forEach(([p]) => off.add(p)); hidePrep = true; }
+      else { off.clear(); hidePrep = false; }
+      render(); return;
+    }
     if (b.dataset.p === 'prep') { hidePrep = !hidePrep; render(); return; }
     const p = +b.dataset.p;
     off.has(p) ? off.delete(p) : off.add(p);

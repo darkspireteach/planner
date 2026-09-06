@@ -51,11 +51,16 @@ button{font:inherit;font-size:10.5px;background:var(--card);color:var(--slate);
 button:hover{border-color:var(--slate)}
 button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
 button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+/* no filled state: the icon already shows the spacing, and this was the only
+   button in the row that inverted */
 nav #tight{padding:3px 7px;line-height:0}
+nav #tight[aria-pressed="true"]{background:var(--card);color:var(--slate);
+  border-color:var(--hair)}
 nav #tight svg{width:13px;height:13px;fill:none;stroke:currentColor;
   stroke-width:1.5;stroke-linecap:round}
 button[hidden]{display:none}
 .classbar{grid-column:1/-1;display:flex;gap:4px;align-items:center;flex-wrap:wrap;
+  justify-content:center;position:relative;
   padding-top:6px;margin-top:3px;border-top:1px solid var(--hair)}
 .classbar>b{font-size:10.5px;font-weight:600;color:var(--slate)}
 .cb{font:inherit;font-size:10.5px;border-radius:4px;padding:1px 6px;cursor:pointer;
@@ -75,12 +80,15 @@ button[hidden]{display:none}
 .bt{border-top:2px solid var(--rule)}
 
 .dh{background:var(--paper);padding:.5em .7em;position:sticky;top:37px;z-index:10}
-.dh b{display:block;font-size:1.05em;font-weight:600}
+.dhtop{display:flex;align-items:baseline;justify-content:space-between;gap:.5em}
+.dh b{font-size:1.05em;font-weight:600}
 .dh span{font-size:.92em;color:var(--mute)}
 /* The school's reason, on any day. On a day with no school it is the label the
    whole column carries; on a school day, filling it in cancels that day —
    a snow day — without touching what is already written in the cells. */
-.dhoff{font-size:.92em;color:var(--slate);padding:.05em .3em;min-height:1.1em}
+.dhoff{font-size:.92em;color:var(--slate);padding:.05em .3em;min-height:1.1em;
+  border-left:2px solid var(--hair);margin-top:.15em}
+.dhoff:not(:empty){border-left-color:var(--amber-ink)}
 .dhoff:hover{box-shadow:inset 0 0 0 1px var(--rule)}
 .dhoff[contenteditable="true"]{outline:2px solid var(--link);outline-offset:-2px;background:#fff}
 .dhoff:empty::before{content:"Cancel day";color:transparent}
@@ -104,12 +112,15 @@ button[hidden]{display:none}
 .corner{background:var(--paper)}
 
 /* left rail: one cell per grid row */
-.rb{background:var(--rail);padding:.45em .35em;text-align:center;line-height:1.2}
+.rb{background:var(--rail);padding:.45em .35em;text-align:center;line-height:1.2;
+  display:flex;flex-direction:column;justify-content:center}
 .rb b{display:block;font-size:1.02em;font-weight:600}
 .rb span{font-size:.84em;color:var(--slate)}
 .rl{background:var(--rail);padding:.4em .5em;font-size:.82em;font-weight:600;
-  color:var(--slate);text-align:right;line-height:1.2}
-.rc{padding:.45em .5em;line-height:1.2}
+  color:var(--slate);text-align:right;line-height:1.2;
+  display:flex;align-items:center;justify-content:flex-end}
+.rc{padding:.45em .5em;line-height:1.2;
+  display:flex;flex-direction:column;justify-content:center}
 .rc b{display:block;font-size:1.02em;font-weight:600}
 .rc span{font-size:.82em;opacity:.85}
 
@@ -213,5 +224,5 @@ a:focus-visible{outline:2px solid var(--link);outline-offset:1px}
 #pop .ed input{font:inherit;font-size:12px;padding:4px 6px;margin-bottom:5px;
   border:1px solid var(--hair);border-radius:4px}
 #pop .ed button{font-size:12px;padding:3px 8px}
-#hint{font-size:11px;color:var(--mute);margin-left:auto}
+#hint{font-size:11px;color:var(--amber-ink);position:absolute;right:0;white-space:nowrap}
 #hint:not(:empty){white-space:nowrap}

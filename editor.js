@@ -217,6 +217,9 @@ function closeCell() {
     if (tag) tag.remove();
     hdr.insertAdjacentHTML('afterbegin', heldTag(rec));
   }
+  // cancelling a day changes every block in that column, and closing a cell
+  // only repaints itself — so the rest of the column has to be told
+  if (f === 'offLines') markCancelled(cell.dataset.w, cell.dataset.d, cell);
   hidePop();
 }
 
@@ -365,6 +368,19 @@ function typingBurst(cell) {
   if (!burst) { mark(cell); burst = true; }
   clearTimeout(burstTimer);
   burstTimer = setTimeout(endBurst, 700);
+}
+
+/** put or clear the cancelled marks down one day's column */
+function markCancelled(w, d, field) {
+  const day = WEEKS[w].days[d];
+  const off = typeof isCancelled === 'function' && isCancelled(day);
+  if (field) field.classList.toggle('cancelled', off);
+  const why = off ? offText(day) : '';
+  document.querySelectorAll('.chd[data-h^="' + w + '.' + d + '."]').forEach(hdr => {
+    const old = hdr.querySelector('.cxl');
+    if (old) old.remove();
+    if (off) hdr.insertAdjacentHTML('beforeend', '<span class="cxl">' + esc(why) + '</span>');
+  });
 }
 
 /* ---------- link menu ---------- */
