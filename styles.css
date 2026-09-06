@@ -114,7 +114,8 @@ button[hidden]{display:none}
 .ed-off .dhoff{display:none}
 
 /* a cancelled day still shows its work, so every block says why it is off */
-.cxl{font-size:.8em;font-weight:600;color:var(--amber-ink);
+/* the same size as the period, not the class name beside it */
+.cxl{font-size:1em;font-weight:600;color:var(--amber-ink);
   background:var(--amber-bg);border-radius:3px;padding:0 .35em;white-space:nowrap}
 .offday .offtag{position:sticky;top:6em;text-align:center;font-style:italic}
 
@@ -146,15 +147,17 @@ button[hidden]{display:none}
 .cell.prep{background:#FCFCFD}
 .prephd{background:var(--rail);color:var(--slate)}
 .prepbox{background:#FCFCFD}
-/* name, then why the day is off, then the held count — the middle slot is the
-   one that only appears sometimes */
+/* name left, why the day is off in the middle, held count right. Spacing them
+   apart beats stacking auto margins, which fought each other and left the
+   middle item wherever the leftovers put it. */
 .chd{padding:.3em .6em;font-size:.98em;line-height:1.25;
-  display:flex;align-items:baseline;gap:.4em;flex-wrap:wrap}
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:.5em;flex-wrap:wrap}
 .chd .who{flex:0 1 auto;min-width:0}
 .chd .tg{font-weight:600;white-space:nowrap}
 .chd .nm{font-weight:400;font-size:.88em;opacity:.8}
-.chd .cxl{margin:0 auto}
-.chd .heldn{flex:0 0 auto;margin-left:auto}
+.chd .cxl{flex:0 0 auto}
+.chd .heldn{flex:0 0 auto}
 /* Every cell carries a blank line's worth of space at the foot, so one cell's
    last line never sits hard against the next cell's first. It is padding, not a
    line in the record — nothing is added to what gets saved or published.
