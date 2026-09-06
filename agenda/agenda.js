@@ -10,9 +10,16 @@
 const esc = s => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+let staff = false;                     // a colleague's link, not a student's
+
 function spanHTML(s) {
   const t = esc(s.t);
-  if (s.url) return `<a href="${esc(s.url)}" target="_blank" rel="noopener">${t}</a>`;
+  if (s.url) {
+    // on a colleague's link an unreleased link is still a working one, marked
+    // so they can see it is not out yet
+    const cls = (staff && !s.rel) ? ' class="held"' : '';
+    return `<a${cls} href="${esc(s.url)}" target="_blank" rel="noopener">${t}</a>`;
+  }
   // held back: shown the way it looks in the planner's own student view, so a
   // student can see something is coming. Never a link, and no address exists
   // in this payload to make one from.
@@ -24,8 +31,8 @@ function linesHTML(ls) {
   if (!ls || !ls.length) return '';
   return ls.map(l => {
     if (!l) return '<div class="gap"></div>';
-    return `<p class="ln${l.bullet ? ' b' : ''}">` +
-           l.spans.map(spanHTML).join('') + '</p>';
+    const cls = 'ln' + (l.bullet ? ' b' : '') + (staff && l.private ? ' pv' : '');
+    return `<p class="${cls}">` + l.spans.map(spanHTML).join('') + '</p>';
   }).join('');
 }
 
@@ -38,15 +45,16 @@ function field(name, ls) {
    Chromebook, stacked only when the screen is too narrow for two columns. */
 function dayHTML(d, stripe) {
   const z = stripe ? ' alt' : '';
+  const note = (staff && d.note) ? `<div class="daynote">${esc(d.note)}</div>` : '';
   if (d.off) {
     return `<div class="row off${z}"><div class="when">${esc(d.d)}</div>` +
-           `<div class="blk"></div><div class="note" role="note">${esc(d.off)}</div></div>`;
+           `<div class="blk"></div><div class="note" role="note">${esc(d.off)}${note}</div></div>`;
   }
   const meets = (d.meets || []).filter(m => m.cw || m.hw);
   if (!meets.length) return '';         // met, nothing posted: say nothing
   return meets.map((m, i) =>
     `<div class="row${z}">` +
-      `<div class="when">${i ? '' : esc(d.d)}</div>` +
+      `<div class="when">${i ? '' : esc(d.d) + note}</div>` +
       `<div class="blk">${esc(m.block || '')}</div>` +
       `<div class="col">${field('Class work', m.cw)}</div>` +
       `<div class="col">${field('Homework', m.hw)}</div>` +
@@ -62,6 +70,8 @@ function linkBar(links) {
 
 function render(data) {
   const app = document.getElementById('app');
+  staff = !!data.staff;
+  document.body.classList.toggle('staffview', staff);
   const c = data.course;
   // period, not section — students know their class by the period they have it
   const heading = c ? (c.tag ? c.tag + ' \u00b7 ' : '') + c.name : 'Class agenda';
@@ -96,7 +106,10 @@ function render(data) {
     })
     .filter(Boolean);
 
-  app.innerHTML = linkBar(data.links) +
+  app.innerHTML =
+    (staff ? '<p class="staffnote">Staff view \u2014 the whole year, unreleased ' +
+             'links and notes included. Not for students.</p>' : '') +
+    linkBar(data.links) +
     (weeks.length ? weeks.join('') : '<p class="msg">Nothing posted yet.</p>');
 }
 
@@ -105,13 +118,14 @@ function fail(msg) {
 }
 
 let lastUpdated = null;
-let tag = '';
+let tag = '', key = '';
 
 async function load(quiet) {
   try {
     // the cache-buster matters: Google caches these replies, and a stale one
     // would show yesterday's plan with no sign that it was old
-    const url = ENDPOINT + '?class=' + tag + '&t=' + Date.now();
+    const url = ENDPOINT + '?class=' + tag + (key ? '&k=' + encodeURIComponent(key) : '') +
+                '&t=' + Date.now();
     let res;
     try {
       res = await fetch(url);
@@ -152,6 +166,7 @@ function watch() {
 function start() {
   const q = new URLSearchParams(location.search);
   tag = (q.get('class') || q.get('cls') || '').toLowerCase();
+  key = q.get('k') || '';
   if (!/^p[1-7]$/.test(tag)) { fail('Add a class to the address, like ?class=p1'); return; }
   load();
   watch();
