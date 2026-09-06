@@ -24,7 +24,7 @@ body{margin:0;background:var(--paper);color:var(--ink);
 header{position:sticky;top:0;z-index:20;background:var(--paper);
   border-bottom:1px solid var(--hair);padding:8px 14px;
   display:grid;grid-template-columns:auto minmax(0,1fr) auto;
-  gap:7px 14px;align-items:baseline}
+  gap:3px 14px;align-items:baseline}
 h1{grid-column:1;grid-row:1;justify-self:start;margin:0;
   font-size:17px;font-weight:600;color:var(--slate);letter-spacing:.01em}
 .weeknav{grid-column:3;grid-row:1;justify-self:end;display:flex;align-items:center;gap:7px}
@@ -63,14 +63,7 @@ button[hidden]{display:none}
    under the buttons above them. Centred on the page would not line up. */
 .classbar{grid-column:2;grid-row:3;justify-self:center;
   display:flex;gap:4px;align-items:center;flex-wrap:wrap}
-.allbar{grid-column:3;grid-row:3;justify-self:end;
-  display:flex;gap:8px;align-items:center}
-.classbar, .allbar{padding-top:6px;margin-top:3px}
-header{border-bottom:1px solid var(--hair)}
-@media (max-width:1150px){
-  .classbar{grid-column:1/-1;grid-row:3}
-  .allbar{grid-column:1/-1;grid-row:4;justify-self:center}
-}
+@media (max-width:1150px){ .classbar{grid-column:1/-1;grid-row:3} }
 .cb{font:inherit;font-size:10.5px;border-radius:4px;padding:1px 6px;cursor:pointer;
   border:1px solid transparent}
 .cb[aria-pressed=false]{background:var(--paper);color:var(--mute);
@@ -238,3 +231,4 @@ a:focus-visible{outline:2px solid var(--link);outline-offset:1px}
   border:1px solid var(--hair);border-radius:4px}
 #pop .ed button{font-size:12px;padding:3px 8px}
 #hint{font-size:11px;color:var(--amber-ink);white-space:nowrap}
+#hint:not(:empty){margin-left:8px}
