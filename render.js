@@ -49,7 +49,11 @@ const ICONS = {
    only ever a question of display. */
 const DAYS = [];
 WEEKS.forEach((w, wIdx) => w.days.forEach((d, dIdx) => DAYS.push({d, w: wIdx, i: dIdx})));
-const SPAN = 5;
+/* How many weekdays are on screen. A preference, because it belongs to the
+   machine — a MacBook has room for six, a school laptop reads better with four.
+   Still consecutive weekdays; never the seven-day rotation. */
+let SPAN = 5;
+const SPANS = [2, 3, 4, 5, 6];
 const clampStart = v => Math.max(0, Math.min(v, Math.max(0, DAYS.length - SPAN)));
 
 let winStart = 0, si = 2, ci = 1, byClass = false, hidePrep = false, student = false, tight = false;
@@ -119,7 +123,7 @@ function todayIndex() {
 
 /* today in the middle of the five. On a weekend that puts Monday there,
    because the search lands on the next school day. */
-const centreOnToday = () => { winStart = clampStart(todayIndex() - 2); };
+const centreOnToday = () => { winStart = clampStart(todayIndex() - Math.floor(SPAN / 2)); };
 
 const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function shortDate(iso) {
@@ -232,6 +236,8 @@ const ref = (w, d, bi, f) => ` data-w="${w}" data-d="${d}" data-bi="${bi}" data-
 
 function render() {
   winStart = clampStart(winStart);        // never draw from outside the calendar
+  document.documentElement.style.setProperty('--cols', SPAN);
+  if (at('span')) { at('span').textContent = SPAN; at('span').title = SPAN + ' days on screen'; }
   const view = DAYS.slice(winStart, winStart + SPAN);
   document.documentElement.style.setProperty('--fs', SIZES[si] + 'px');
   document.documentElement.style.setProperty('--lh', tight ? '1.25' : '1.4');
@@ -240,7 +246,7 @@ function render() {
   /* The label is just the range now. Whether you are at today is the Today
      button's job — a tag that says "Today" over a five-day window that may or
      may not contain it was telling you less than it looked like. */
-  const home = winStart === clampStart(todayIndex() - 2);
+  const home = winStart === clampStart(todayIndex() - Math.floor(SPAN / 2));
   if (at('wklabel')) at('wklabel').textContent = windowLabel(view);
   if (at('today')) {
     at('today').innerHTML = ICONS.target;
@@ -412,7 +418,7 @@ const PREFS = 'planner.view.v1';
 function savePrefs() {
   try {
     localStorage.setItem(PREFS, JSON.stringify(
-      {si, ci, byClass, student, tight, hidePrep, off: [...off]}));
+      {si, ci, SPAN, byClass, student, tight, hidePrep, off: [...off]}));
   } catch (e) { /* storage unavailable */ }
 }
 function loadPrefs() {
@@ -420,6 +426,7 @@ function loadPrefs() {
     const p = JSON.parse(localStorage.getItem(PREFS) || '{}');
     if (Number.isInteger(p.si) && p.si >= 0 && p.si < SIZES.length) si = p.si;
     if (Number.isInteger(p.ci) && p.ci >= 0 && p.ci < COLOUR.length) ci = p.ci;
+    if (SPANS.indexOf(p.SPAN) >= 0) SPAN = p.SPAN;
     byClass = !!p.byClass; student = !!p.student;
     tight = !!p.tight; hidePrep = !!p.hidePrep;
     if (Array.isArray(p.off)) p.off.forEach(x => off.add(+x));
@@ -430,6 +437,11 @@ function loadPrefs() {
 
 function wireToolbar() {
   const on = (id, fn) => document.getElementById(id).onclick = e => { fn(e.currentTarget); render(); };
+  on('span', () => {
+    SPAN = SPANS[(SPANS.indexOf(SPAN) + 1) % SPANS.length];
+    sized = false;                        // the label box is measured per span
+    centreOnToday();
+  });
   on('prevWk', () => winStart = clampStart(winStart - SPAN));
   on('prev', () => winStart = clampStart(winStart - 1));
   on('next', () => winStart = clampStart(winStart + 1));

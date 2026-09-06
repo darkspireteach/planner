@@ -61,6 +61,7 @@ button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 /* no filled state: the icon already shows the spacing, and this was the only
    button in the row that inverted */
 nav #tight, nav #colour, nav #tview, nav #tstu{padding:3px 7px;line-height:0}
+nav #span{min-width:1.6em;font-variant-numeric:tabular-nums}
 nav button.ico{padding:3px 7px;line-height:0}
 nav #tview[aria-pressed], nav #tstu[aria-pressed]{background:var(--card)}
 nav #tight[aria-pressed="true"]{background:var(--card);color:var(--slate);
@@ -84,7 +85,7 @@ button[hidden]{display:none}
    Borders are drawn per cell rather than by a grid gap, so every internal
    rule is provably the same weight instead of depending on how the gap
    happens to fall between two backgrounds. */
-.grid{display:grid;grid-template-columns:5em repeat(5,minmax(0,1fr));gap:0;
+.grid{display:grid;grid-template-columns:5em repeat(var(--cols,5),minmax(0,1fr));gap:0;
   background:var(--hair);border-bottom:2px solid var(--rule);font-size:var(--fs)}
 .grid > *{border-top:1px solid var(--hair);border-left:1px solid var(--hair)}
 .grid > .dh, .grid > .corner{border-top:0}
