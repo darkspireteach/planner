@@ -28,16 +28,15 @@ main{max-width:78rem;margin:0 auto;padding:8px 14px 48px}
 
 /* not sticky: it slides down the page as you scroll, which is distracting on a
    page you read straight through */
-.week>h2{margin:18px 0 0;padding:6px 10px;font-weight:400;
+.week>h2{margin:18px 0 0;padding:7px 12px;font-weight:400;
   background:var(--accent);color:#fff;border-radius:3px;
-  display:grid;grid-template-columns:1fr auto;gap:0 18px;align-items:baseline}
-.week>h2 .cls{grid-column:2;justify-self:end;font-size:13.5px;font-weight:600;opacity:.92}
-.week>h2 .dates{grid-column:1;font-size:13.5px;font-weight:600;letter-spacing:.05em}
-.week>h2 .upd{grid-column:1/-1;font-size:11px;opacity:.7;margin-top:1px}
-.week:first-of-type>h2{margin-top:12px}
+  display:flex;justify-content:space-between;align-items:center;gap:16px}
+.week>h2 .when2{display:flex;flex-direction:column;line-height:1.25}
+.week>h2 .dates{font-size:13px;font-weight:600;letter-spacing:.05em}
+.week>h2 .upd{font-size:11px;opacity:.7}
+.week>h2 .cls{font-size:16px;font-weight:600;white-space:nowrap}
+.week:first-of-type>h2{margin-top:10px}
 
-/* Date, block, class work, homework — four columns, the way the old agenda
-   read. Chromebook screens are wide; a single column wasted most of one. */
 .row{display:grid;grid-template-columns:6.5rem 4.6rem 1fr 1fr;
   gap:0 14px;padding:7px 10px;border-bottom:1px solid var(--hair);
   align-items:start}

@@ -65,7 +65,7 @@ function render(data) {
   const c = data.course;
   // period, not section — students know their class by the period they have it
   const heading = c ? (c.tag ? c.tag + ' \u00b7 ' : '') + c.name : 'Class agenda';
-  document.title = c ? heading + ' \u2014 agenda' : 'Class agenda';
+  document.title = c ? heading + ' Agenda' : 'Class agenda';
   if (c && c.fill) document.documentElement.style.setProperty('--accent', c.ink || '#1B3A5C');
 
   const stamp = data.updated
@@ -84,10 +84,14 @@ function render(data) {
       }).join('');
       // the class name, the dates and when it was last updated all live in the
       // bar — there is no separate page header to take up a Chromebook's screen
+      // dates over the updated time on one side, the class name on the other,
+      // centred against both — a flex row so the centring cannot come adrift
       return days ? '<section class="week"><h2>' +
+        '<span class="when2">' +
+          `<span class="dates">${esc(w.label)}</span>` +
+          (stamp ? `<span class="upd">${esc(stamp)}</span>` : '') +
+        '</span>' +
         `<span class="cls">${esc(heading)}</span>` +
-        `<span class="dates">${esc(w.label)}</span>` +
-        (stamp ? `<span class="upd">${esc(stamp)}</span>` : '') +
         `</h2>${days}</section>` : '';
     })
     .filter(Boolean);
