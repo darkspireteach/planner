@@ -73,7 +73,9 @@ student = false;
 
 console.log('\\n--- ABSENCES ---');
 absent = {'P1|9/2': ['AB: Test Student', 'T: Late Student'], 'P1|9/3': []};
-wi = 0; byClass = false; student = false; render();   // 9/2 lives in the first week
+// put 9/2 on screen: the view is a sliding window now, not a numbered week
+winStart = clampStart(DAYS.findIndex(x => x.d.iso === '2026-09-02') - 1);
+byClass = false; student = false; render();
 check('absences appear for the teacher',
   /AB: Test Student/.test(document.getElementById('app').innerHTML));
 check('each code gets its own line',
