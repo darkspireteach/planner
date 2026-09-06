@@ -27,7 +27,6 @@ let absent = {};               // keyed 'P1|9/14', holding lines of codes and na
 let absentNote = '';           // why they are missing, when they are
 const ABSENT_CODES = ['AB', 'T', 'TE', 'TX'];
 let syncing = false, retryTimer = null;
-let syncNote = 'Not connected';
 
 function loadSync() {
   try {
@@ -325,7 +324,6 @@ function setPub(t) {
 const QUIET = {'Up to date': 1, 'Saved': 1};
 
 function setNote(t) {
-  syncNote = t;
   const el = document.getElementById('sync');
   if (!el) return;
   el.title = t;

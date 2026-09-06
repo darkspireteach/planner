@@ -89,6 +89,15 @@ document — the risk is a student being *given* the link. It is a separate toke
 from the write one, so `New colleague link` revokes it without disturbing the
 machines I write from.
 
+## Refactoring the renderer
+
+`node test/golden.js` writes every rendered state to `/tmp/golden.txt` — 216 of
+them, across both views, three widths, three colour modes, student and teacher,
+prep shown and hidden, at three window positions. Run it before and after a
+structural change and diff the two. Identical output means nothing visible
+moved. It is not part of `run-all.js`, because a markup snapshot would fail on
+every intentional change to the UI.
+
 ## Not done yet
 
 - The student page: published JSON, one page per class.

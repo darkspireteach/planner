@@ -234,32 +234,14 @@ const key = (w, d, bi) => `${w}.${d}.${bi}`;
 const ref = (w, d, bi, f) => ` data-w="${w}" data-d="${d}" data-bi="${bi}" data-f="${f}"` +
                              ` data-h="${key(w, d, bi)}"`;
 
-function render() {
-  winStart = clampStart(winStart);        // never draw from outside the calendar
-  document.documentElement.style.setProperty('--cols', SPAN);
-  if (at('span')) { at('span').textContent = SPAN; at('span').title = SPAN + ' days on screen'; }
-  const view = DAYS.slice(winStart, winStart + SPAN);
+/* Toolbar and switches — everything above the grid. */
+function paintChrome(view) {
   document.documentElement.style.setProperty('--fs', SIZES[si] + 'px');
   document.documentElement.style.setProperty('--lh', tight ? '1.25' : '1.4');
+  document.documentElement.style.setProperty('--cols', SPAN);
+  if (at('span')) { at('span').textContent = SPAN; at('span').title = SPAN + ' days on screen'; }
   (at('tight') || {}).innerHTML = LINES(!tight);
-  sizeWeekLabel();
-  /* The label is just the range now. Whether you are at today is the Today
-     button's job — a tag that says "Today" over a five-day window that may or
-     may not contain it was telling you less than it looked like. */
-  const home = winStart === clampStart(todayIndex() - Math.floor(SPAN / 2));
-  if (at('wklabel')) at('wklabel').textContent = windowLabel(view);
-  if (at('today')) {
-    at('today').innerHTML = ICONS.target;
-    at('today').disabled = home;
-    at('today').title = home ? 'Already at today' : 'Back to today';
-  }
-  if (at('colour')) {
-    at('colour').innerHTML = FILL_ICON(ci);
-    at('colour').title = 'Colour: ' + COLOUR[ci];
-  }
-  const last = Math.max(0, DAYS.length - SPAN);
-  ['prev', 'prevWk'].forEach(id => { if (at(id)) at(id).disabled = winStart === 0; });
-  ['next', 'nextWk'].forEach(id => { if (at(id)) at(id).disabled = winStart === last; });
+  if (at('colour')) { at('colour').innerHTML = FILL_ICON(ci); at('colour').title = 'Colour: ' + COLOUR[ci]; }
   if (at('tview')) {
     at('tview').innerHTML = byClass ? ICONS.columns : ICONS.rows;
     at('tview').title = byClass ? 'By schedule' : 'By class';
@@ -270,9 +252,19 @@ function render() {
   }
   document.body.classList.toggle('ed-off', student);
 
+  sizeWeekLabel();
+  const home = winStart === clampStart(todayIndex() - Math.floor(SPAN / 2));
+  if (at('wklabel')) at('wklabel').textContent = windowLabel(view);
+  if (at('today')) {
+    at('today').innerHTML = ICONS.target;
+    at('today').disabled = home;
+    at('today').title = home ? 'Already at today' : 'Back to today';
+  }
+  const last = Math.max(0, DAYS.length - SPAN);
+  ['prev', 'prevWk'].forEach(id => { if (at(id)) at(id).disabled = winStart === 0; });
+  ['next', 'nextWk'].forEach(id => { if (at(id)) at(id).disabled = winStart === last; });
+
   const allOn = ALL.every(([p]) => shown(p)) && (byClass || !hidePrep);
-  // the class switches sit in the same column as the buttons above them, so the
-  // two rows line up — which reads better than being centred on the page
   if (at('classbar')) at('classbar').innerHTML =
     ALL.map(([p, c]) =>
       `<button class="cb" data-p="${p}" aria-pressed="${shown(p)}"` +
@@ -284,9 +276,10 @@ function render() {
     (allOn ? ` style="background:var(--rail);color:var(--ink)"` : '') + `>All</button>` +
     `<span id="hint">${(typeof absentNote !== 'undefined' && absentNote && !student)
         ? '\u26a0 ' + esc(absentNote) : ''}</span>`;
+}
 
-
-  P.length = 0;
+/* The date row across the top. */
+function paintHeaders(view) {
   put(1, 1, 1, 'corner');
   const iso = todayISO();
   view.forEach(({d, w: wi, i}, col) => put(col + 2, 1, 1,
@@ -300,9 +293,10 @@ function render() {
         `data-d="${i}" data-f="off" data-h="${wi}.${i}.o">${lines(d.offLines)}</div>`) +
     (student ? '' : `<div class="dhnote" data-w="${wi}" data-d="${i}" ` +
       `data-f="note" data-h="${wi}.${i}.n">${lines(d.noteLines)}</div>`)));
+}
 
-  let r = 2;
-  if (byClass) {
+function paintByClass(view, r) {
+
     for (const [per, c] of roster(view)) {
       // a course that picks up ASP any day this week gets its own row for it,
       // so every day keeps the same rows and the columns stay aligned
@@ -347,7 +341,11 @@ function render() {
       });
       r += rowsN;
     }
-  } else {
+  return r;
+}
+
+function paintBySchedule(view, r) {
+
     /* First work out which block rows will be drawn and how tall each is, so a
        no-school day can be merged into one band across all of them rather than
        labelling only the first and leaving the rest blank. */
@@ -406,7 +404,17 @@ function render() {
       });
       r += span;
     });
-  }
+  return r;
+}
+
+function render() {
+  winStart = clampStart(winStart);        // never draw from outside the calendar
+  const view = DAYS.slice(winStart, winStart + SPAN);
+  paintChrome(view);
+
+  P.length = 0;
+  paintHeaders(view);
+  (byClass ? paintByClass : paintBySchedule)(view, 2);
   document.getElementById('app').innerHTML = '<div class="grid">' + P.join('') + '</div>';
   if (typeof restoreSelection === 'function') restoreSelection();
   savePrefs();
