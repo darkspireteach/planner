@@ -24,18 +24,17 @@ body{margin:0;background:var(--paper);color:var(--ink);
   font:16px/1.5 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
   -webkit-text-size-adjust:100%}
 
-header{position:sticky;top:0;background:var(--paper);z-index:5;
-  padding:14px 18px 10px;border-bottom:2px solid var(--accent)}
-h1{margin:0;font-size:19px;font-weight:600;color:var(--accent)}
-#stamp{font-size:12.5px;color:var(--mute);margin-top:2px}
-
-main{max-width:78rem;margin:0 auto;padding:0 14px 48px}
+main{max-width:78rem;margin:0 auto;padding:8px 14px 48px}
 
 /* not sticky: it slides down the page as you scroll, which is distracting on a
    page you read straight through */
-.week>h2{margin:20px 0 0;padding:6px 10px;
-  background:var(--accent);color:#fff;font-size:12.5px;font-weight:600;
-  letter-spacing:.06em;border-radius:3px}
+.week>h2{margin:22px 0 0;padding:8px 12px;font-weight:400;
+  background:var(--accent);color:#fff;border-radius:3px;
+  display:grid;grid-template-columns:auto 1fr;gap:0 18px;align-items:baseline}
+.week>h2 .cls{font-size:15px;font-weight:600}
+.week>h2 .dates{font-size:12.5px;font-weight:600;letter-spacing:.06em;opacity:.9}
+.week>h2 .upd{grid-column:1/-1;font-size:11.5px;opacity:.72;margin-top:2px}
+.week:first-of-type>h2{margin-top:12px}
 
 /* Date, block, class work, homework — four columns, the way the old agenda
    read. Chromebook screens are wide; a single column wasted most of one. */
