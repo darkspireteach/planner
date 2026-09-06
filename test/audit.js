@@ -16,11 +16,23 @@ const fail = [];
 const check = (name, ok, detail) => console.log((ok ? '  PASS  ' : '  FAIL  ') + name + (detail ? '   ' + detail : '')) || (ok || fail.push(name));
 
 console.log('\\n--- HARD CONSTRAINTS ---');
-for (const v of [false, true]) { byClass = v; for (wi of [0,1]) { render();
-  const cols = new Set([...document.querySelectorAll('.dh')].map(e => e.style.gridColumn));
-  if (cols.size !== 5) fail.push('week is not five columns');
-} }
-check('week view is always Mon-Fri, never a 7-day cycle', !fail.includes('week is not five columns'), '5 day columns in both views');
+/* The constraint was never "exactly five" — it is that the view is a run of
+   consecutive weekdays and never the seven-day rotation. The width is now a
+   preference, so check the columns match it and that the headers are dates. */
+let widthBad = 0, cycleBad = 0;
+for (const v of [false, true]) {
+  byClass = v;
+  for (const n of [2, 3, 4, 5, 6]) {
+    SPAN = n; centreOnToday(); render();
+    const heads = [...document.querySelectorAll('.dh')];
+    if (heads.length !== n) widthBad++;
+    // a day header names a weekday and a date, never "Day 4"
+    if (!heads.every(h => /^(Mon|Tue|Wed|Thu|Fri)/.test(h.textContent.trim()))) cycleBad++;
+  }
+}
+SPAN = 5; centreOnToday();
+check('the view is always the chosen number of weekdays', widthBad === 0, '2 to 6, both views');
+check('columns are dates, never cycle days', cycleBad === 0);
 
 byClass = false; student = false; render();
 const absCells = [...document.querySelectorAll('.abs')];
