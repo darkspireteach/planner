@@ -23,7 +23,7 @@ let titles = {};               // url -> document name, so we ask Drive once
 /* Absences are read from the gradebook and kept in memory ONLY. They carry
    student names, and a school machine's browser storage is the last place
    those should end up — so this is deliberately absent from saveSync(). */
-let absent = {};               // 'P1|9/14' -> ['AB: Naweed E']
+let absent = {};               // keyed 'P1|9/14', holding lines of codes and names
 let absentNote = '';           // why they are missing, when they are
 const ABSENT_CODES = ['AB', 'T', 'TE', 'TX'];
 let syncing = false, retryTimer = null;
@@ -316,14 +316,34 @@ function setNote(t) {
 }
 
 function connect() {
-  const url = window.prompt('Sync URL (the /exec address)', cfg.url || '');
+  const url = window.prompt(
+    'Sync URL (the /exec address)\n\nLeave blank to disconnect this machine.',
+    cfg.url || '');
   if (url === null) return;
+  if (!url.trim()) { disconnect(); return; }
   const token = window.prompt('Token', cfg.token || '');
   if (token === null) return;
   cfg.url = url.trim();
   cfg.token = token.trim();
   saveSync();
   startSync();
+}
+
+/**
+ * Forget the token on this machine. The real weak point is not the code being
+ * public — it is a school laptop left unlocked with the planner open, where the
+ * token can be read straight out of browser storage. Anything still queued is
+ * kept, so nothing unsaved is lost by disconnecting.
+ */
+function disconnect() {
+  if (Object.keys(queue).length &&
+      !window.confirm(Object.keys(queue).length + ' change(s) have not been sent yet.\n\n' +
+        'Disconnect anyway? They stay on this machine until you reconnect.')) return;
+  cfg.url = ''; cfg.token = '';
+  absent = {}; absentNote = '';
+  saveSync();
+  setNote('Not connected');
+  render();
 }
 
 async function startSync() {

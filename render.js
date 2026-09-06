@@ -34,11 +34,20 @@ for (const w of WEEKS) for (const d of w.days) {
   if (d.offLines === undefined) d.offLines = asLines(d.cycle ? '' : d.off);
 }
 
-/** the school's reason, as plain text, for the grey band across the day */
+/** the school's reason, as plain text, for the band across the day */
 function offText(d) {
   if (!d.offLines) return d.off || '';
   return d.offLines.filter(Boolean).map(l => l.spans.map(s => s.t).join('')).join(' ').trim();
 }
+
+/* A day the calendar never had school: nothing was ever planned, so the whole
+   column merges into one band. */
+const isOff = d => !d.cycle;
+
+/* A day I cancelled after the fact — a snow day. The rotation carries on by
+   date, so nothing shifts; but there is work in those cells I still have to
+   move somewhere, so they stay readable and every block says why. */
+const isCancelled = d => !!d.cycle && !!offText(d);
 
 /* Monday of the week we're actually in, as YYYY-MM-DD */
 function mondayISO() {
@@ -169,12 +178,11 @@ function render() {
   put(1, 1, 1, 'corner');
   w.days.forEach((d, i) => put(i + 2, 1, 1, 'dh', '',
     `<b>${d.d}</b>` +
-    (d.cycle
-      ? `<span>Day ${d.cycle}</span>`
-      : (student
-          ? `<span>${esc(offText(d) || 'No school')}</span>`
-          : `<div class="dhoff" data-w="${wi}" data-d="${i}" data-f="off" ` +
-            `data-h="${wi}.${i}.o">${lines(d.offLines)}</div>`)) +
+    `<span>${d.cycle ? 'Day ' + d.cycle : 'No school'}</span>` +
+    (student
+      ? (offText(d) ? `<em>${esc(offText(d))}</em>` : '')
+      : `<div class="dhoff${isCancelled(d) ? ' cancelled' : ''}" data-w="${wi}" ` +
+        `data-d="${i}" data-f="off" data-h="${wi}.${i}.o">${lines(d.offLines)}</div>`) +
     (student ? '' : `<div class="dhnote" data-w="${wi}" data-d="${i}" ` +
       `data-f="note" data-h="${wi}.${i}.n">${lines(d.noteLines)}</div>`)));
 
@@ -223,21 +231,36 @@ function render() {
       r += rowsN;
     }
   } else {
+    /* First work out which block rows will be drawn and how tall each is, so a
+       no-school day can be merged into one band across all of them rather than
+       labelling only the first and leaving the rest blank. */
+    const plan = [];
+    let planRow = r;
     WEEKS[0].days[2].blocks.forEach((proto, bi) => {
+      if (hidePrep && !w.days.some(d => d.blocks[bi] && d.blocks[bi].course && shown(d.blocks[bi].period))) return;
       const isAsp = proto.block === 'ASP';
       const last = isAsp ? 2 : 3;
       const span = last + (student ? 0 : 1);
-      if (hidePrep && !w.days.some(d => d.blocks[bi] && d.blocks[bi].course && shown(d.blocks[bi].period))) return;
+      plan.push({proto, bi, isAsp, last, span, row: planRow});
+      planRow += span;
+    });
+    const bodyTop = r, bodyRows = planRow - r;
+
+    // a day with no school at all: one band, once, across the whole column
+    w.days.forEach((d, di) => {
+      if (!isOff(d) || !bodyRows) return;
+      put(di + 2, bodyTop, bodyRows, 'cell off bt offday', '',
+          `<div class="offtag">${esc(offText(d) || 'No school')}</div>`);
+    });
+
+    plan.forEach(({proto, bi, isAsp, last, span}) => {
       put(1, r, 1, 'rb bt', '', `<b>${proto.block}</b>`);
       put(1, r + 1, 1, 'rl', '', isAsp ? 'Notes' : 'Class work');
       if (!isAsp) put(1, r + 2, 1, 'rl', '', 'Homework');
       if (!student) put(1, r + last, 1, 'rl', '', 'Absent');
       w.days.forEach((d, di) => {
         const col = di + 2;
-        if (!d.cycle) {
-          put(col, r, span, 'cell off bt', '', bi === 0 ? `<div class="offtag">${esc(offText(d) || 'No school')}</div>` : '');
-          return;
-        }
+        if (isOff(d)) return;                        // already merged above
         const b = d.blocks[bi], c = b.course;
         if (c && !shown(b.period)) {                 // a class switched off
           put(col, r, span, 'cell prep bt', '', '');
@@ -253,7 +276,8 @@ function render() {
           return;
         }
         put(col, r, 1, 'chd bt', `background:${c.fill};color:${c.ink}`,
-            `${heldTag(b)}<span class="tg">${c.sym}\u00A0${c.tag}</span> <span class="nm">${c.name}</span>`,
+            `${heldTag(b)}<span class="tg">${c.sym}\u00A0${c.tag}</span> <span class="nm">${c.name}</span>` +
+            (isCancelled(d) ? `<span class="cxl">${esc(offText(d))}</span>` : ''),
             ` data-h="${key(wi, di, bi)}"`);
         put(col, r + 1, 1, 'cell sub', bodyBG(c), lines(b.cw), ref(wi, di, bi, 'cw'));
         if (!isAsp) put(col, r + 2, 1, 'cell sub', bodyBG(c), lines(b.hw), ref(wi, di, bi, 'hw'));

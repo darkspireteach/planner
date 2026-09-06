@@ -11,6 +11,7 @@
 :root{
   --fs:12.5px; --lh:1.4;
   --font:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --amber-ink:#8A4B00; --amber-bg:#FDF3E3;
   --paper:#F7F8F9; --card:#FFFFFF; --ink:#16202B; --slate:#5F6E7B;
   --mute:#8B97A2; --hair:#BCC5CC; --rule:#55646F; --rail:#E7EBEE;
   --link:#0B4C81; --held:#3D4A56; --off:#E4E8EB;
@@ -24,9 +25,9 @@ header{position:sticky;top:0;z-index:20;background:var(--paper);
   border-bottom:1px solid var(--hair);padding:8px 14px;
   display:grid;grid-template-columns:auto minmax(0,1fr) auto;
   gap:7px 14px;align-items:baseline}
-h1{grid-column:3;grid-row:1;justify-self:end;margin:0;
+h1{grid-column:1;grid-row:1;justify-self:start;margin:0;
   font-size:17px;font-weight:600;color:var(--slate);letter-spacing:.01em}
-.weeknav{grid-column:1;grid-row:1;display:flex;align-items:center;gap:7px}
+.weeknav{grid-column:3;grid-row:1;justify-self:end;display:flex;align-items:center;gap:7px}
 .weeknav button{font-size:13px;padding:1px 9px;line-height:1.25;color:var(--ink)}
 /* The box is held open by an invisible copy of the longest label there can be,
    so it is measured in the real font instead of guessed at in em — and the
@@ -76,12 +77,21 @@ button[hidden]{display:none}
 .dh{background:var(--paper);padding:.5em .7em;position:sticky;top:37px;z-index:10}
 .dh b{display:block;font-size:1.05em;font-weight:600}
 .dh span{font-size:.92em;color:var(--mute)}
-/* the school's reason for no school: editable, and what the day's cells show */
+/* The school's reason, on any day. On a day with no school it is the label the
+   whole column carries; on a school day, filling it in cancels that day —
+   a snow day — without touching what is already written in the cells. */
 .dhoff{font-size:.92em;color:var(--slate);padding:.05em .3em;min-height:1.1em}
 .dhoff:hover{box-shadow:inset 0 0 0 1px var(--rule)}
 .dhoff[contenteditable="true"]{outline:2px solid var(--link);outline-offset:-2px;background:#fff}
-.dhoff:empty::before{content:"No school";color:var(--mute)}
+.dhoff:empty::before{content:"Cancel day";color:transparent}
+.dhoff:empty:hover::before{color:var(--mute)}
+.dhoff.cancelled{color:var(--amber-ink);font-weight:600}
 .ed-off .dhoff{display:none}
+
+/* a cancelled day still shows its work, so every block says why it is off */
+.cxl{margin-left:auto;font-size:.8em;font-weight:600;color:var(--amber-ink);
+  background:var(--amber-bg);border-radius:3px;padding:0 .35em;white-space:nowrap}
+.offday .offtag{position:sticky;top:6em;text-align:center;font-style:italic}
 
 .dhnote{font-size:.92em;color:var(--slate);margin-top:.2em;
   padding:.1em .3em .1em .5em;border-left:2px solid transparent;min-height:1.1em}
