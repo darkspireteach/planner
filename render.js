@@ -2,6 +2,14 @@
 
 const SIZES = [10, 11, 12.5, 14, 16];
 const COLOUR = ['header', 'tinted', 'full'];
+/* how much of the cell the course colour fills: none, half, all */
+const FILLS = [
+  '',
+  '<path d="M2.5 8a5.5 5.5 0 0 0 11 0z" class="on"/>',
+  '<circle cx="8" cy="8" r="5.5" class="on"/>'
+];
+const FILL_ICON = i => '<svg viewBox="0 0 16 16">' +
+  '<circle cx="8" cy="8" r="5.5"/>' + FILLS[i] + '</svg>';
 let wi = 0, si = 2, ci = 1, byClass = false, hidePrep = false, student = false, tight = false;
 
 /* three rules, drawn close or far apart — the button shows the spacing you get */
@@ -160,7 +168,10 @@ function render() {
   sizeWeekLabel();
   (at('wklabel') || {}).innerHTML =
     (w.mon === mondayISO() ? '<b>This week</b> \u00b7 ' : '') + w.label;
-  (at('colour') || {}).textContent = 'Colour: ' + COLOUR[ci];
+  if (at('colour')) {
+    at('colour').innerHTML = FILL_ICON(ci);
+    at('colour').title = 'Colour: ' + COLOUR[ci];
+  }
   (at('prev') || {}).disabled = wi === 0;
   (at('next') || {}).disabled = wi === WEEKS.length - 1;
   (at('tview') || {}).textContent = byClass ? 'By schedule' : 'By class';
