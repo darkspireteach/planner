@@ -277,6 +277,9 @@ async function linkTitle(url) {
   try {
     const d = await call('title', {url});
     titles[url] = d.title || '';
+    // a year of pasted links would otherwise grow this without limit
+    const keys = Object.keys(titles);
+    if (keys.length > 400) for (const k of keys.slice(0, keys.length - 300)) delete titles[k];
     saveSync();
     return titles[url];
   } catch (err) {
