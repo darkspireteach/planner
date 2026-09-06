@@ -15,10 +15,25 @@ const FILL_ICON = i => '<svg viewBox="0 0 16 16">' +
    something to report. A mode you flip twice a day is learned in a day; a
    status you only read when it is wrong has to say what is wrong. */
 const SVG = p => '<svg viewBox="0 0 16 16">' + p + '</svg>';
+
+/* nine cells; the listed ones are filled, the rest faint */
+function CHECKER(on) {
+  const at = i => 1.6 + i * 4.6;
+  const lit = new Set(on.map(([c, r]) => c + ',' + r));
+  let out = '';
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+    out += '<rect x="' + at(c) + '" y="' + at(r) + '" width="3.6" height="3.6" rx="0.7"' +
+           ' class="' + (lit.has(c + ',' + r) ? 'on' : 'off') + '"/>';
+  }
+  return out;
+}
 const ICONS = {
-  // days down columns, or classes along rows
-  columns: SVG('<path d="M3 2.5v11M8 2.5v11M13 2.5v11"/>'),
-  rows:    SVG('<path d="M2.5 3h11M2.5 8h11M2.5 13h11"/>'),
+  /* A 3x3 of the grid itself, with one class lit up. In the by-class view a
+     course is a single row; by schedule it is scattered down the diagonal,
+     because P1 falls on Block 1 Wednesday, Block 3 Thursday, Block 5 Friday.
+     The icon shows what happens to one class, not an abstract shape. */
+  columns: SVG(CHECKER([[0,0],[1,1],[2,2]])),      // by schedule: a diagonal
+  rows:    SVG(CHECKER([[0,1],[1,1],[2,1]])),      // by class: one row
   eye:     SVG('<path d="M1.5 8s2.4-4.2 6.5-4.2S14.5 8 14.5 8s-2.4 4.2-6.5 4.2S1.5 8 1.5 8z"/>' +
                '<circle cx="8" cy="8" r="1.9"/>'),
   pencil:  SVG('<path d="M11.6 2.4l2 2-7.4 7.4-3 1 1-3z"/><path d="M2 14.6h12"/>'),
@@ -113,13 +128,13 @@ function shortDate(iso) {
 }
 
 /** the range on screen, e.g. SEP 2 – SEP 8, 2026 */
+/* Only the closing year. A five-day range that starts in December and ends in
+   January needs no help being understood, and carrying both years would widen
+   the box all year for one week of it. */
 function windowLabel(view) {
   if (!view.length) return '';
   const a = view[0].d.iso, b = view[view.length - 1].d.iso;
-  const yr = b.split('-')[0];
-  const ya = a.split('-')[0];
-  return shortDate(a) + (ya === yr ? '' : ', ' + ya) +
-         ' \u2013 ' + shortDate(b) + ', ' + yr;
+  return shortDate(a) + ' \u2013 ' + shortDate(b) + ', ' + b.split('-')[0];
 }
 
 /* Hold the label box open at the width of the longest label in the file. */
