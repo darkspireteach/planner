@@ -21,13 +21,16 @@ body{margin:0;background:var(--paper);color:var(--ink);
   font:14px/1.45 var(--font)}
 /* grid, not flex-wrap: the title stays pinned to the top right at any width
    instead of trailing whichever row the buttons happen to wrap onto */
+/* Two rows, each running the full width: title against the week on top,
+   settings against the class switches below. Nothing floats in a middle
+   column with empty space either side of it. */
 header{position:sticky;top:0;z-index:20;background:var(--paper);
-  border-bottom:1px solid var(--hair);padding:8px 14px;
-  display:grid;grid-template-columns:auto minmax(0,1fr) auto;
-  gap:3px 14px;align-items:baseline}
-h1{grid-column:1;grid-row:1;justify-self:start;margin:0;
+  border-bottom:1px solid var(--hair);padding:7px 14px 6px;
+  display:grid;grid-template-columns:auto auto;justify-content:space-between;
+  gap:5px 14px;align-items:center}
+h1{grid-column:1;grid-row:1;margin:0;
   font-size:17px;font-weight:600;color:var(--slate);letter-spacing:.01em}
-.weeknav{grid-column:3;grid-row:1;justify-self:end;display:flex;align-items:center;gap:7px}
+.weeknav{grid-column:2;grid-row:1;justify-self:end;display:flex;align-items:center;gap:7px}
 .weeknav button{font-size:13px;padding:1px 9px;line-height:1.25;color:var(--ink)}
 /* The box is held open by an invisible copy of the longest label there can be,
    so it is measured in the real font instead of guessed at in em — and the
@@ -40,11 +43,7 @@ h1{grid-column:1;grid-row:1;justify-self:start;margin:0;
 .wk b{color:var(--ink);font-weight:700}
 /* wide: date left, buttons centred, title right, all on one line.
    narrow: buttons drop to their own row rather than crushing the date. */
-nav{grid-column:2;grid-row:1;justify-self:center;
-  display:flex;gap:4px;align-items:center;flex-wrap:wrap}
-@media (max-width:1150px){
-  nav{grid-column:1/-1;grid-row:2;justify-self:center}
-}
+nav{grid-column:1;grid-row:2;display:flex;gap:4px;align-items:center;flex-wrap:wrap}
 .sep{width:1px;height:18px;background:var(--hair);margin:0 3px}
 button{font:inherit;font-size:10.5px;background:var(--card);color:var(--slate);
   border:1px solid var(--hair);border-radius:4px;padding:1px 6px;cursor:pointer}
@@ -61,9 +60,14 @@ nav #tight svg{width:13px;height:13px;fill:none;stroke:currentColor;
 button[hidden]{display:none}
 /* Column 2 and column 3 of the header grid, so the class switches sit directly
    under the buttons above them. Centred on the page would not line up. */
-.classbar{grid-column:2;grid-row:3;justify-self:center;
+.classbar{grid-column:2;grid-row:2;justify-self:end;
   display:flex;gap:4px;align-items:center;flex-wrap:wrap}
-@media (max-width:1150px){ .classbar{grid-column:1/-1;grid-row:3} }
+@media (max-width:1000px){
+  header{grid-template-columns:1fr}
+  .weeknav{grid-column:1;grid-row:2;justify-self:start}
+  nav{grid-column:1;grid-row:3}
+  .classbar{grid-column:1;grid-row:4;justify-self:start}
+}
 .cb{font:inherit;font-size:10.5px;border-radius:4px;padding:1px 6px;cursor:pointer;
   border:1px solid transparent}
 .cb[aria-pressed=false]{background:var(--paper);color:var(--mute);
